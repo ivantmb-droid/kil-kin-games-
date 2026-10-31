@@ -1,4 +1,4 @@
-то<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
@@ -120,7 +120,6 @@
     ctx.fillStyle = '#e75480'; ctx.beginPath(); ctx.moveTo(cx - R * 0.08, cy + R * 0.22); ctx.lineTo(cx + R * 0.08, cy + R * 0.22); ctx.lineTo(cx, cy + R * 0.32); ctx.closePath(); ctx.fill();
     ctx.strokeStyle = '#2d2d2d'; ctx.lineWidth = R * 0.05; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(cx, cy + R * 0.32); ctx.lineTo(cx - R * 0.15, cy + R * 0.45); ctx.moveTo(cx, cy + R * 0.32); ctx.lineTo(cx + R * 0.15, cy + R * 0.45); ctx.stroke();
     ctx.lineWidth = R * 0.03; for (let side = -1; side <= 1; side += 2) { for (let i = -1; i <= 1; i++) { ctx.beginPath(); ctx.moveTo(cx + side * R * 0.25, cy + R * 0.35 + i * R * 0.1); ctx.lineTo(cx + side * R * 0.85, cy + R * 0.25 + i * R * 0.18); ctx.stroke(); } }
-    ctx.fillStyle = 'rgba(255,150,180,.5)'; ctx.beginPath(); ctx.ellipse(cx - R * 0.55, cy + R * 0.25, R * 0.15, R * 0.1, 0, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.ellipse(cx + R * 0.55, cy + R * 0.25, R * 0.15, R * 0.1, 0, 0, Math.PI * 2); ctx.fill();
     return c;
   }
   function drawHouse(size) {
@@ -129,8 +128,6 @@
     ctx.fillStyle = '#FFD700'; ctx.beginPath(); ctx.arc(size * 0.8, size * 0.2, size * 0.1, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#8B4513'; ctx.fillRect(size * 0.3, size * 0.45, size * 0.4, size * 0.35);
     ctx.fillStyle = '#FF6347'; ctx.beginPath(); ctx.moveTo(size * 0.2, size * 0.45); ctx.lineTo(size * 0.5, size * 0.2); ctx.lineTo(size * 0.8, size * 0.45); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#A0522D'; ctx.fillRect(size * 0.45, size * 0.6, size * 0.1, size * 0.2);
-    ctx.fillStyle = '#87CEEB'; ctx.fillRect(size * 0.35, size * 0.55, size * 0.1, size * 0.1); ctx.fillRect(size * 0.55, size * 0.55, size * 0.1, size * 0.1);
     return c;
   }
   function drawDog(size) {
@@ -139,8 +136,6 @@
     const cx = size / 2, cy = size / 2, R = size * 0.3;
     ctx.fillStyle = '#d2b48c'; ctx.beginPath(); ctx.ellipse(cx, cy, R, R * 1.1, 0, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#8b4513'; ctx.beginPath(); ctx.ellipse(cx - R * 0.8, cy - R * 0.2, R * 0.3, R * 0.6, -0.2, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.ellipse(cx + R * 0.8, cy - R * 0.2, R * 0.3, R * 0.6, 0.2, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.ellipse(cx, cy + R * 0.5, R * 0.5, R * 0.3, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#2d2d2d'; ctx.beginPath(); ctx.arc(cx, cy + R * 0.4, R * 0.15, 0, Math.PI * 2); ctx.fill();
     return c;
   }
   function drawCow(size) {
@@ -149,14 +144,13 @@
     const cx = size / 2, cy = size / 2, R = size * 0.32;
     ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.ellipse(cx, cy, R, R * 0.9, 0, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#333'; ctx.beginPath(); ctx.ellipse(cx - R * 0.5, cy - R * 0.4, R * 0.3, R * 0.2, 0.5, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.ellipse(cx + R * 0.6, cy + R * 0.2, R * 0.25, R * 0.3, -0.3, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#f5deb3'; ctx.beginPath(); ctx.ellipse(cx, cy + R * 0.3, R * 0.5, R * 0.4, 0, 0, Math.PI * 2); ctx.fill();
     return c;
   }
   function drawCar(size) {
     const c = document.createElement('canvas'); c.width = size; c.height = size; const ctx = c.getContext('2d');
     const g = ctx.createLinearGradient(0, 0, 0, size); g.addColorStop(0, '#b3e5fc'); g.addColorStop(1, '#cfd8dc'); ctx.fillStyle = g; ctx.fillRect(0, 0, size, size);
     ctx.fillStyle = '#555'; ctx.fillRect(0, size * 0.7, size, size * 0.1);
-    ctx.fillStyle = '#ff5722'; ctx.beginPath(); ctx.roundRect(size * 0.1, size * 0.5, size * 0.8, size * 0.2, size * 0.05); ctx.fill(); ctx.beginPath(); ctx.roundRect(size * 0.25, size * 0.3, size * 0.5, size * 0.2, size * 0.05); ctx.fill();
+    ctx.fillStyle = '#ff5722'; ctx.beginPath(); ctx.roundRect(size * 0.1, size * 0.5, size * 0.8, size * 0.2, size * 0.05); ctx.fill();
     return c;
   }
   function drawPlane(size) {
@@ -195,8 +189,7 @@
       }; reader.readAsDataURL(file);
     });
   }
-
-  function startGame(imageDrawFunc) { switchScreen(selectScreen, gameScreen); init(imageDrawFunc); }
+    function startGame(imageDrawFunc) { switchScreen(selectScreen, gameScreen); init(imageDrawFunc); }
   window.askBack = () => { if (placedCount === SIZE * SIZE) window.goToTitle(); else confirmOverlay.classList.add('show'); };
   window.confirmBack = () => { confirmOverlay.classList.remove('show'); switchScreen(gameScreen, selectScreen); };
   window.cancelBack = () => { confirmOverlay.classList.remove('show'); };
@@ -235,8 +228,125 @@
     const rows = Math.ceil(ord.length / perRow); tray.style.height = (rows * (scaled + gap) + gap) + 'px';
   }
   function shuffleArray(arr) {
-    const a = arr.slice(); f
-or (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+    const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+    let same = true; for (let i = 0; i < a.length; i++) { if (a[i].row !== Math.floor(i / SIZE) || a[i].col !== i % SIZE) { same = false; break; } }
+    if (same) return shuffleArray(arr); return a;
+  }
+  function attachEvents(el) { el.addEventListener('pointerdown', onDown); el.addEventListener('pointermove', onMove); el.addEventListener('pointerup', onUp); el.addEventListener('pointercancel', onUp); }
+  function onDown(e) {
+    const el = e.currentTarget; if (el.dataset.placed === '1' || !shuffled) return; e.preventDefault();
+    const piece = pieces.find(p => p.el === el); if (!piece) return;
+    dragging = piece; dragStarted = false; currentScale = parseFloat(el.dataset.scale) || TRAY_SCALE; overBoard = false;
+    const rect = el.getBoundingClientRect(); dragOffset.x = (e.clientX - rect.left) / currentScale; dragOffset.y = (e.clientY - rect.top) / currentScale;
+    startX = e.clientX; startY = e.clientY; el.style.zIndex = 1000; el.style.transition = 'none';
+    const left = e.clientX - dragOffset.x * currentScale, top = e.clientY - dragOffset.y * currentScale;
+    el.style.position = 'fixed'; el.style.left = '0px'; el.style.top = '0px'; el.style.transform = 'translate(' + left + 'px,' + top + 'px) scale(' + currentScale + ')';
+    el.setPointerCapture(e.pointerId);
+  }
+  function onMove(e) {
+    if (!dragging) return; e.preventDefault(); const dx = e.clientX - startX, dy = e.clientY - startY;
+    if (!dragStarted && Math.abs(dx) + Math.abs(dy) > 6) dragStarted = true; if (!dragStarted) return;
+    const boardRect = board.getBoundingClientRect();
+    const isOver = e.clientX >= boardRect.left && e.clientX <= boardRect.right && e.clientY >= boardRect.top && e.clientY <= boardRect.bottom;
+    if (isOver !== overBoard) { overBoard = isOver; currentScale = overBoard ? BOARD_SCALE : TRAY_SCALE; dragging.el.style.transition = 'transform ' + SCALE_DURATION + 'ms ease'; dragging.el.dataset.scale = currentScale; }
+    const left = e.clientX - dragOffset.x * currentScale, top = e.clientY - dragOffset.y * currentScale;
+    dragging.el.style.transform = 'translate(' + left + 'px,' + top + 'px) scale(' + currentScale + ')'; updateHighlight(e.clientX, e.clientY);
+  }
+  function updateHighlight(cx, cy) {
+    if (!dragging) { hideHighlight(); return; } const boardRect = board.getBoundingClientRect(); const piece = dragging;
+    const targetX = boardRect.left + piece.col * cellSize, targetY = boardRect.top + piece.row * cellSize;
+    const left = cx - dragOffset.x * currentScale, top = cy - dragOffset.y * currentScale;
+    const tol = cellSize * SNAP_TOLERANCE; const within = Math.abs(left - targetX) < tol && Math.abs(top - targetY) < tol;
+    if (within && overBoard) {
+      if (!highlightActive) { highlightEl.style.display = 'block'; highlightEl.style.left = targetX + 'px'; highlightEl.style.top = targetY + 'px'; highlightEl.style.width = cellSize + 'px'; highlightEl.style.height = cellSize + 'px'; highlightActive = true; }
+    } else { hideHighlight(); }
+  }
+  function hideHighlight() { if (highlightActive) { highlightEl.style.display = 'none'; highlightActive = false; } }
+  function onUp(e) {
+    if (!dragging) return; const piece = dragging; dragging = null; hideHighlight();
+    piece.el.style.zIndex = ''; piece.el.style.transition = 'transform ' + SCALE_DURATION + 'ms ease';
+    if (!dragStarted) { returnToTray(piece); return; }
+    const boardRect = board.getBoundingClientRect(); const left = e.clientX - dragOffset.x * currentScale, top = e.clientY - dragOffset.y * currentScale;
+    const targetX = boardRect.left + piece.col * cellSize, targetY = boardRect.top + piece.row * cellSize;
+    const tol = cellSize * SNAP_TOLERANCE; const over = e.clientX >= boardRect.left && e.clientX <= boardRect.right && e.clientY >= boardRect.top && e.clientY <= boardRect.bottom;
+    if (over && Math.abs(left - targetX) < tol && Math.abs(top - targetY) < tol) { placePiece(piece); } else { piece.el.classList.add('shake'); setTimeout(() => { piece.el.classList.remove('shake'); returnToTray(piece); }, 400); }
+  }
+  function returnToTray(piece) {
+    const el = piece.el; el.style.transition = 'transform ' + SCALE_DURATION + 'ms ease';
+    el.style.position = 'absolute'; el.style.left = '0px'; el.style.top = '0px'; el.dataset.scale = TRAY_SCALE;
+    el.style.transform = 'translate(' + el.dataset.trayX + 'px,' + el.dataset.trayY + 'px) scale(' + TRAY_SCALE + ')'; el.style.zIndex = '';
+  }
+  function placePiece(piece) {
+    const el = piece.el; el.dataset.placed = '1'; piece.placed = true; placedCount++; el.classList.add('placed');
+    const boardRect = board.getBoundingClientRect(); const x = boardRect.left + piece.col * cellSize, y = boardRect.top + piece.row * cellSize;
+    el.style.position = 'fixed'; el.style.left = '0px'; el.style.top = '0px'; el.style.transition = 'transform ' + SCALE_DURATION + 'ms ease'; el.dataset.scale = BOARD_SCALE;
+    el.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + BOARD_SCALE + ')'; el.style.boxShadow = 'none'; el.style.borderRadius = '0';
+    drawBoard(); if (placedCount === SIZE * SIZE) finishGame();
+  }
+  function finishGame() {
+    shuffled = false; linesShown = false; drawBoard();
+    setTimeout(() => {
+      const vw = window.innerWidth, vh = window.innerHeight; let s = Math.min(vw * 0.9, vh * 0.65);
+      winCanvas.width = s; winCanvas.height = s; winCanvas.style.width = s + 'px'; winCanvas.style.height = s + 'px';
+      winCanvas.getContext('2d').drawImage(boardImg, 0, 0, s, s); winOverlay.classList.add('show');
+    }, 350);
+  }
+  btnLines.addEventListener('click', () => { linesShown = true; drawBoard(); btnLines.disabled = true; btnShuffle.disabled = false; });
+  btnShuffle.addEventListener('click', () => { if (shuffled) return; shuffled = true; btnShuffle.disabled = true; drawBoard(); const order = shuffleArray(pieces); pieces.forEach(p => { p.el.style.display = ''; }); layoutTray(order); });
+  btnRestartWin.addEventListener('click', () => { winOverlay.classList.remove('show'); startGame(boardImg.originalDrawFunc); });
+  function init(imageDrawFunc) {
+    linesShown = false; shuffled = false; placedCount = 0; dragging = null; dragStarted = false; overBoard = false; hideHighlight(); tray.style.height = '0px';
+    boardSize = calcBoardSize(); cellSize = Math.floor(boardSize / SIZE); boardSize = cellSize * SIZE;
+    boardWrap.style.width = boardSize + 'px'; boardWrap.style.height = boardSize + 'px';
+    boardImg = imageDrawFunc(boardSize * 2); boardImg.originalDrawFunc = imageDrawFunc;
+    drawBoard(); btnLines.disabled = false; btnShuffle.disabled = true;
+    createPieces(); tray.style.width = '100%';
+  }
+  window.addEventListener('resize', () => { if (placedCount === 0 && !shuffled) { if (gameScreen.classList.contains('active')) init(boardImg.originalDrawFunc); } });
+  renderGallery();
+})();
+</script>
+</body>
+</html>  function startGame(imageDrawFunc) { switchScreen(selectScreen, gameScreen); init(imageDrawFunc); }
+  window.askBack = () => { if (placedCount === SIZE * SIZE) window.goToTitle(); else confirmOverlay.classList.add('show'); };
+  window.confirmBack = () => { confirmOverlay.classList.remove('show'); switchScreen(gameScreen, selectScreen); };
+  window.cancelBack = () => { confirmOverlay.classList.remove('show'); };
+
+  function calcBoardSize() { return Math.floor(Math.min(window.innerWidth * 0.9, window.innerHeight * 0.55)); }
+  function drawBoard() {
+    const ctx = board.getContext('2d'); const bs = boardSize;
+    board.width = bs; board.height = bs; board.style.width = bs + 'px'; board.style.height = bs + 'px';
+    if (shuffled && placedCount < SIZE * SIZE) { ctx.globalAlpha = HINT_ALPHA; ctx.drawImage(boardImg, 0, 0, bs, bs); ctx.globalAlpha = 1; } else { ctx.globalAlpha = 1; ctx.drawImage(boardImg, 0, 0, bs, bs); }
+    if (linesShown) {
+      ctx.strokeStyle = 'rgba(0,0,0,.55)'; ctx.lineWidth = 2;
+      for (let i = 1; i < SIZE; i++) { const p = (bs / SIZE) * i; ctx.beginPath(); ctx.moveTo(p, 0); ctx.lineTo(p, bs); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0, p); ctx.lineTo(bs, p); ctx.stroke(); }
+    }
+  }
+  function createPieces() {
+    pieces.forEach(p => p.el.remove()); pieces = []; placedCount = 0;
+    const cs = cellSize;
+    for (let r = 0; r < SIZE; r++) {
+      for (let c = 0; c < SIZE; c++) {
+        const el = document.createElement('div'); el.className = 'piece'; el.style.width = cs + 'px'; el.style.height = cs + 'px';
+        el.style.backgroundImage = 'url(' + boardImg.toDataURL() + ')'; el.style.backgroundSize = (cs * SIZE) + 'px ' + (cs * SIZE) + 'px'; el.style.backgroundPosition = (-c * cs) + 'px ' + (-r * cs) + 'px';
+        el.style.display = 'none'; el.dataset.row = r; el.dataset.col = c; el.dataset.placed = '0'; el.dataset.scale = TRAY_SCALE;
+        tray.appendChild(el); pieces.push({ el, row: r, col: c, placed: false }); attachEvents(el);
+      }
+    }
+  }
+  function layoutTray(order) {
+    const cs = cellSize, scaled = cs * TRAY_SCALE, gap = 6; const totalW = tray.clientWidth || (boardSize + 16);
+    const perRow = Math.max(1, Math.floor((totalW - gap) / (scaled + gap))); const ord = order || pieces.slice();
+    ord.forEach((p, idx) => {
+      p.el.style.display = ''; const row = Math.floor(idx / perRow), col = idx % perRow;
+      const x = gap + col * (scaled + gap), y = gap + row * (scaled + gap); const el = p.el;
+      el.style.position = 'absolute'; el.style.left = '0px'; el.style.top = '0px'; el.style.transition = 'transform ' + SCALE_DURATION + 'ms ease';
+      el.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + TRAY_SCALE + ')'; el.dataset.trayX = x; el.dataset.trayY = y; el.dataset.scale = TRAY_SCALE;
+    });
+    const rows = Math.ceil(ord.length / perRow); tray.style.height = (rows * (scaled + gap) + gap) + 'px';
+  }
+  function shuffleArray(arr) {
+    const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
     let same = true; for (let i = 0; i < a.length; i++) { if (a[i].row !== Math.floor(i / SIZE) || a[i].col !== i % SIZE) { same = false; break; } }
     if (same) return shuffleArray(arr); return a;
   }

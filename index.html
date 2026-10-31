@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Nicki Games — Пазлы</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; height: 100%; background: #f0f4f8; font-family: system-ui, -apple-system, sans-serif; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; }
+  .screen { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; background: #f0f4f8; z-index: 1; }
+  .screen.active { opacity: 1; pointer-events: auto; z-index: 10; }
+  #titleScreen { background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%); }
+  .title-text { font-size: 48px; font-weight: 800; color: #fff; text-shadow: 0 4px 12px rgba(0,0,0,.2); display: flex; gap: 4px; margin-bottom: 20px; }
+  .title-text span { display: inline-block; animation: bounce 2s infinite ease-in-out; }
+  .title-text span:nth-child(2n) { animation-delay: 0.2s; }
+  .title-text span:nth-child(3n) { animation-delay: 0.4s; }
+  .title-text span:nth-child(4n) { animation-delay: 0.6s; }
+  @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+  .subtitle { font-size: 22px; color: #fff; margin-bottom: 40px; font-weight: 600; text-shadow: 0 2px 8px rgba(0,0,0,.15); }
+  button { font-size: 20px; font-weight: 700; padding: 16px 40px; border: none; border-radius: 20px; color: #fff; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,.2); transition: transform 0.1s, box-shadow 0.1s; }
+  button:active { transform: scale(0.95); box-shadow: 0 2px 6px rgba(0,0,0,.2); }
+  .btn-play { background: #ff6b6b; font-size: 26px; padding: 18px 60px; animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+  .btn-back { background: #95a5a6; padding: 10px 20px; font-size: 16px; position: absolute; top: 16px; left: 16px; z-index: 100; }
+  .btn-upload { background: #27ae60; margin-top: 20px; }
+  #selectScreen { background: #f0f4f8; padding: 20px; justify-content: flex-start; padding-top: 60px; }
+  .select-title { font-size: 24px; font-weight: 700; color: #333; margin-bottom: 20px; text-align: center; }
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; width: 100%; max-width: 500px; }
+  .card { background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,.1); cursor: pointer; transition: transform 0.1s; display: flex; flex-direction: column; align-items: center; }
+  .card:active { transform: scale(0.96); }
+  .card canvas { width: 100%; height: auto; display: block; }
+  .card span { padding: 10px; font-size: 16px; font-weight: 600; color: #444; }
+  #gameScreen { display: flex; flex-direction: column; align-items: center; padding: 8px; gap: 8px; justify-content: flex-start; }
+  #boardWrap { position: relative; flex-shrink: 0; margin-top: 40px; }
+  #board { display: block; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,.15); background: #fff; }
+  #tray { position: relative; width: 100%; display: flex; flex-wrap: wrap; justify-content: center; align-content: flex-start; gap: 4px; padding: 4px; }
+  .piece { position: absolute; border-radius: 4px; background-repeat: no-repeat; box-shadow: 0 2px 6px rgba(0,0,0,.2); touch-action: none; will-change: transform, left, top; transition: transform 0.18s ease; }
+  .piece.placed { box-shadow: none; border-radius: 0; transition: none; }
+  .piece.shake { animation: shake .4s ease; }
+  @keyframes shake { 0%,100% { transform: translateX(0) rotate(0); } 20% { transform: translateX(-8px) rotate(-3deg); } 40% { transform: translateX(8px) rotate(3deg); } 60% { transform: translateX(-6px) rotate(-2deg); } 80% { transform: translateX(6px) rotate(2deg); } }
+  #buttons { display: flex; gap: 12px; padding: 4px 0; }
+  #btnLines { background: #4a90d9; }
+  #btnShuffle { background: #e67e22; }
+  #btnRestartWin { background: #27ae60; font-size: 22px; padding: 16px 40px; }
+  #highlight { position: fixed; pointer-events: none; border-radius: 4px; background: rgba(74,144,217,.25); border: 2px solid rgba(74,144,217,.8); z-index: 999; display: none; box-sizing: border-box; }
+  #win { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: none; flex-direction: column; align-items: center; justify-content: center; gap: 24px; z-index: 1000; padding: 20px; }
+  #win.show { display: flex; }
+  #winCanvas { border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,.5); }
+  #winTitle { color: #fff; font-size: 32px; font-weight: 800; text-shadow: 0 2px 8px rgba(0,0,0,.5); }
+  #confirm { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+  #confirm.show { display: flex; }
+  #confirmBox { background: #fff; padding: 24px; border-radius: 20px; text-align: center; max-width: 300px; width: 100%; }
+  #confirmBox p { font-size: 18px; margin: 0 0 20px 0; color: #333; }
+  .confirm-btns { display: flex; gap: 12px; justify-content: center; }
+  .confirm-btns button { font-size: 16px; padding: 12px 20px; }
+  .btn-yes { background: #e74c3c; }
+  .btn-no { background: #bdc3c7; color: #333; }
+  #loading { position: fixed; inset: 0; background: rgba(0,0,0,.7); display: none; align-items: center; justify-content: center; color: #fff; font-size: 20px; z-index: 2000; }
+  #loading.show { display: flex; }
+</style>
+</head>
+<body>
+
+<div id="titleScreen" class="screen active">
+  <div class="title-text"><span>N</span><span>I</span><span>C</span><span>K</span><span>I</span></div>
+  <div class="subtitle">Весёлые Пазлы</div>
+  <button class="btn-play" onclick="goToSelect()">ИГРАТЬ</button>
+</div>
+
+<div id="selectScreen" class="screen">
+  <button class="btn-back" onclick="goToTitle()">← Назад</button>
+  <div class="select-title">Выбери картинку:</div>
+  <div class="grid" id="galleryGrid"></div>
+  <button class="btn-upload" onclick="document.getElementById('fileInput').click()">📷 Своё фото</button>
+  <input type="file" id="fileInput" accept="image/*" style="display: none;">
+</div>
+
+<div id="gameScreen" class="screen">
+  <button class="btn-back" onclick="askBack()">← Назад</button>
+  <div id="boardWrap"><canvas id="board"></canvas></div>
+  <div id="buttons">
+    <button id="btnLines">Показать линии</button>
+    <button id="btnShuffle" disabled>Перемешать</button>
+  </div>
+  <div id="tray"></div>
+</div>
+
+<div id="highlight"></div>
+<div id="loading">Загрузка фото...</div>
+
+<div id="win">
+  <div id="winTitle">Победа! 🎉</div>
+  <canvas id="winCanvas"></canvas>
+  <button id="btnRestartWin">Играть ещё</button>
+</div>
+
+<div id="confirm">
+  <div id="confirmBox">
+    <p>Точно хочешь выйти?<br>Пазл не собран.</p>
+    <div class="confirm-btns">
+      <button class="btn-yes" onclick="confirmBack()">Да</button>
+      <button class="btn-no" onclick="cancelBack()">Нет</button>
+    </div>
+  </div>
+</div>
+<skript>
+<(function() {
+  const SIZE = 3, TRAY_SCALE = 0.65, BOARD_SCALE = 1.0, HINT_ALPHA = 0.15, SCALE_DURATION = 180, SNAP_TOLERANCE = 0.6;
+  let boardSize = 0, cellSize = 0, linesShown = false, shuffled = false, pieces = [], boardImg = null, placedCount = 0;
+  let dragging = null, dragOffset = { x: 0, y: 0 }, startX = 0, startY = 0, dragStarted = false, currentScale = TRAY_SCALE, overBoard = false, highlightActive = false;
+
+  const titleScreen = document.getElementById('titleScreen'), selectScreen = document.getElementById('selectScreen'), gameScreen = document.getElementById('gameScreen');
+  const galleryGrid = document.getElementById('galleryGrid'), boardWrap = document.getElementById('boardWrap'), board = document.getElementById('board'), tray = document.getElementById('tray');
+  const btnLines = document.getElementById('btnLines'), btnShuffle = document.getElementById('btnShuffle'), btnRestartWin = document.getElementById('btnRestartWin');
+  const winOverlay = document.getElementById('win'), winCanvas = document.getElementById('winCanvas'), highlightEl = document.getElementById('highlight');
+  const confirmOverlay = document.getElementById('confirm'), loadingOverlay = document.getElementById('loading'), fileInput = document.getElementById('fileInput');
+
+  // --- РИСОВАНИЕ КАРТИНОК ---
+  function drawCat(size) {
+    const c = document.createElement('canvas'); c.width = size; c.height = size; const ctx = c.getContext('2d');
+    const g = ctx.createLinearGradient(0, 0, size, size); g.addColorStop(0, '#ffe9b8'); g.addColorStop(1, '#ffd4e5'); ctx.fillStyle = g; ctx.fillRect(0, 0, size, size);
+    const cx = size / 2, cy = size / 2, R = size * 0.32;
+    ctx.fillStyle = '#f4a460'; ctx.beginPath(); ctx.moveTo(cx - R * 0.75, cy - R * 0.55); ctx.lineTo(cx - R * 0.95, cy - R * 1.35); ctx.lineTo(cx - R * 0.2, cy - R * 0.95); ctx.closePath(); ctx.fill(); ctx.beginPath(); ctx.moveTo(cx + R * 0.75, cy - R * 0.55); ctx.lineTo(cx + R * 0.95, cy - R * 1.35); ctx.lineTo(cx + R * 0.2, cy - R * 0.95); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#ffb6c1'; ctx.beginPath(); ctx.moveTo(cx - R * 0.7, cy - R * 0.6); ctx.lineTo(cx - R * 0.82, cy - R * 1.15); ctx.lineTo(cx - R * 0.3, cy - R * 0.85); ctx.closePath(); ctx.fill(); ctx.beginPath(); ctx.moveTo(cx + R * 0.7, cy - R * 0.6); ctx.lineTo(cx + R * 0.82, cy - R * 1.15); ctx.lineTo(cx + R * 0.3, cy - R * 0.85); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#f4a460'; ctx.beginPath(); ctx.ellipse(cx, cy, R, R * 0.9, 0, 0, Math.PI * 2); ctx.fill();
+    const eyeY = cy - R * 0.1, eyeDX = R * 0.45; ctx.fillStyle = '#2d2d2d'; ctx.beginPath(); ctx.ellipse(cx - eyeDX, eyeY, R * 0.16, R * 0.22, 0, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.ellipse(cx + eyeDX, eyeY, R * 0.16, R * 0.22, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(cx - eyeDX + R * 0.05, eyeY - R * 0.08, R * 0.06, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(cx + eyeDX + R * 0.05, eyeY - R * 0.08, R * 0.06, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#e75480'; ctx.beginPath(); ctx.moveTo(cx - R * 0.08, cy + R * 0.22); ctx.lineTo(cx + R * 0.08, cy + R * 0.22); ctx.lineTo(cx, cy + R * 0.32); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#2d2d2d'; ctx.lineWidth = R * 0.05; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(cx, cy + R * 0.32); ctx.lineTo(cx - R * 0.15, cy + R * 0.45); ctx.moveTo(cx, cy + R * 0.32); ctx.lineTo(cx + R * 0.15, cy + R * 0.45); ctx.stroke();
+    ctx.lineWidth = R * 0.03; for (let side = -1; side <= 1; side += 2) { for (let i = -1; i <= 1; i++) { ctx.beginPath(); ctx.moveTo(cx + side * R * 0.25, cy + R * 0.35 + i * R * 0.1); ctx.lineTo(cx + side * R * 0.85, cy + R * 0.25 + i * R * 0.18); ctx.stroke(); } }
+    ctx.fillStyle = 'rgba(255,150,180,.5)'; ctx.beginPath(); ctx.ellipse(cx - R * 0.55, cy + R * 0.25, R * 0.15, R * 0.1, 0, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.ellipse(cx + R * 0.55, cy + R * 0.25, R * 0.15, R * 0.1, 0, 0, Math.PI * 2); ctx.fill();
+    return c;
+  }
+  function drawHouse(size) {
+    const c = document.createElement('canvas'); c.width = size; c.height = size; const ctx = c.getContext('2d');
+    const g = ctx.createLinearGradient(0, 0, 0, size); g.addColorStop(0, '#87CEEB'); g.addColorStop(1, '#98FB98'); ctx.fillStyle = g; ctx.fillRect(0, 0, size, size);
+    ctx.fillStyle = '#FFD700'; ctx.beginPath(); ctx.arc(size * 0.8, size * 0.2, size * 0.1, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#8B4513'; ctx.fillRect(size * 0.3, size * 0.45, size * 0.4, size * 0.35);
+    ctx.fillStyle = '#FF6347'; ctx.beginPath(); ctx.moveTo(size * 0.2, size * 0.45); ctx.lineTo(size * 0.5, size * 0.2); ctx.lineTo(size * 0.8, size * 0.45); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#A0522D'; ctx.fillRect(size * 0.45, size * 0.6, size * 0.1, size * 0.2);
+    ctx.fillStyle = '#87CEEB'; ctx.fillRect(size * 0.35, size * 0.55, size * 0.1, size * 0.1); ctx.fillRect(size * 0.55, size * 0.55, size * 0.1, size * 0.1);
+    ctx.fillStyle = '#228B22'; ctx.beginPath(); ctx.arc(size * 0.15, size * 0.8, size * 0.1, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#8B4513'; ctx.fillRect(size * 0.13, size * 0.8, size * 0.04, size * 0.15);
+    return c;
+  }
+  function drawDog(size) {
+    const c = document.createElement('canvas'); c.width = size; c.height = size; const ctx = c.getContext('2d');
+    const g = ctx.createLinearGradient(0, 0, size, size); g.addColorStop(0, '#e0f7fa'); g.addColorStop(1, '#b2ebf2'); ctx.fillStyle = g; ctx.fillRect(0, 0, size, size);
+    const cx = size / 2, cy = size / 2, R = size * 0.3;
+    ctx.fillStyle = '#d2b48c'; ctx.beginPath(); ctx.ellipse(cx, cy, R, R * 1.1, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#8b4513'; ctx.beginPath(); ctx.ellipse(cx - R * 0.8, cy - R * 0.2, R * 0.3, R * 0.6, -0.2, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.ellipse(cx + R * 0.8, cy - R * 0.2, R * 0.3, R * 0.6, 0.2, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.ellipse(cx, cy + R * 0.5, R * 0.5, R * 0.3, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#2d2d2d'; ctx.beginPath(); ctx.arc(cx, cy + R * 0.4, R * 0.15, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.ellipse(cx - R * 0.4, cy - R * 0.2, R * 0.1, R * 0.15, 0, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.ellipse(cx + R * 0.4, cy - R * 0.2, R * 0.1, R * 0.15, 0, 0, Math.PI * 2); ctx.fill();
+    return c;
+  }
+  function drawCow(size) {
+    const c = document.createElement('canvas'); c.width = size; c.height = size; const ctx = c.getContext('2d');
+    const g = ctx.createLinearGradient(0, 0, size, size); g.addColorStop(0, '#ffe0b2'); g.addColorStop(1, '#ffcc80'); ctx.fillStyle = g; ctx.fillRect(0, 0, size, size);
+    const cx = size / 2, cy = size / 2, R = size * 0.32;
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.ellipse(cx, cy, R, R * 0.9, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#333'; ctx.beginPath(); ctx.ellipse(cx - R * 0.5, cy - R * 0.4, R * 0.3, R * 0.2, 0.5, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.ellipse(cx + R * 0.6, cy + R * 0.2, R * 0.25, R * 0.3, -0.3, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#f5deb3'; ctx.beginPath(); ctx.ellipse(cx, cy + R * 0.3, R * 0.5, R * 0.4, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#e75480'; ctx.beginPath(); ctx.ellipse(cx - R * 0.1, cy + R * 0.4, R * 0.08, R * 0.1, 0, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.ellipse(cx + R * 0.1, cy + R * 0.4, R * 0.08, R * 0.1, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#2d2d2d'; ctx.beginPath(); ctx.arc(cx, cy - R * 0.1, R * 0.1, 0, Math.PI * 2); ctx.fill();
+    return c;
+  }
+  function drawCar(size) {
+    const c = document.createElement('canvas'); c.width = size; c.height = size; const ctx = c.getContext('2d');
+    const g = ctx.createLinearGradient(0, 0, 0, size); g.addColorStop(0, '#b3e5fc'); g.addColorStop(1, '#cfd8dc'); ctx.fillStyle = g; ctx.fillRect(0, 0, size, size);
+    ctx.fillStyle = '#555'; ctx.fillRect(0, size * 0.7, size, size * 0.1);
+    ctx.fillStyle = '#ff5722'; ctx.beginPath(); ctx.roundRect(size * 0.1, size * 0.5, size * 0.8, size * 0.2, size * 0.05); ctx.fill(); ctx.beginPath(); ctx.roundRect(size * 0.25, size * 0.3, size * 0.5, size * 0.2, size * 0.05); ctx.fill();
+    ctx.fillStyle = '#bbdefb'; ctx.fillRect(size * 0.3, size * 0.35, size * 0.15, size * 0.15); ctx.fillRect(size * 0.55, size * 0.35, size * 0.15, size * 0.15);
+    ctx.fillStyle = '#333'; ctx.beginPath(); ctx.arc(size * 0.25, size * 0.7, size * 0.1, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(size * 0.75, size * 0.7, size * 0.1, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#ccc'; ctx.beginPath(); ctx.arc(size * 0.25, size * 0.7, size * 0.05, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(size * 0.75, size * 0.7, size * 0.05, 0, Math.PI * 2); ctx.fill();
+    return c;
+  }
+  function drawPlane(size) {
+    const c = document.createElement('canvas'); c.width = size; c.height = size; const ctx = c.getContext('2d');
+    const g = ctx.createLinearGradient(0, 0, 0, size); g.addColorStop(0, '#87CEEB'); g.addColorStop(1, '#fff'); ctx.fillStyle = g; ctx.fillRect(0, 0, size, size);
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(size * 0.8, size * 0.2, size * 0.08, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(size * 0.7, size * 0.15, size * 0.06, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#f44336'; ctx.beginPath(); ctx.ellipse(size * 0.5, size * 0.55, size * 0.3, size * 0.1, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#d32f2f'; ctx.beginPath(); ctx.moveTo(size * 0.5, size * 0.45); ctx.lineTo(size * 0.8, size * 0.55); ctx.lineTo(size * 0.5, size * 0.55); ctx.closePath(); ctx.fill(); ctx.beginPath(); ctx.moveTo(size * 0.4, size * 0.55); ctx.lineTo(size * 0.3, size * 0.35); ctx.lineTo(size * 0.5, size * 0.55); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#90a4ae'; ctx.beginPath(); ctx.ellipse(size * 0.4, size * 0.55, size * 0.1, size * 0.04, 0, 0, Math.PI * 2); ctx.fill();
+    return c;
+  }
+
+  const galleryData = [
+    { name: 'Котёнок', draw: drawCat }, { name: 'Домик', draw: drawHouse }, { name: 'Щенок', draw: drawDog },
+    { name: 'Коровка', draw: drawCow }, { name: 'Машинка', draw: drawCar }, { name: 'Самолётик', draw: drawPlane }
+  ];
+
+  function switchScreen(from, to) {
+    from.classList.remove('active'); setTimeout(() => { from.style.display = 'none'; to.style.display = 'flex'; setTimeout(() => to.classList.add('active'), 50); }, 300);
+  }
+
+  window.goToTitle = () => switchScreen(selectScreen, titleScreen);
+  window.goToSelect = () => switchScreen(titleScreen, selectScreen);
+
+  function renderGallery() {
+    if (!galleryGrid) return; galleryGrid.innerHTML = '';
+    galleryData.forEach(item => {
+      const div = document.createElement('div'); div.className = 'card';
+      const canvas = document.createElement('canvas'); canvas.width = 200; canvas.height = 200; canvas.getContext('2d').drawImage(item.draw(200), 0, 0);
+      const span = document.createElement('span'); span.textContent = item.name;
+      div.appendChild(canvas); div.appendChild(span); div.onclick = () => startGame(item.draw); galleryGrid.appendChild(div);
+    });
+  }
+
+  if (fileInput) {
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0]; if (!file) return; loadingOverlay.classList.add('show');
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const size = Math.min(img.width, img.height); const canvas = document.createElement('canvas'); canvas.width = 800; canvas.height = 800;
+          canvas.getContext('2d').drawImage(img, (img.width - size) / 2, (img.height - size) / 2, size, size, 0, 0, 800, 800);
+          startGame(() => canvas); loadingOverlay.classList.remove('show'); fileInput.value = '';
+        };
+        img.src = event.target.result;
+      }; reader.readAsDataURL(file);
+    });
+  }
+
+  function startGame(imageDrawFunc) { switchScreen(selectScreen, gameScreen); init(imageDrawFunc); }
+  window.askBack = () => { if (placedCount === SIZE * SIZE) window.goToTitle(); else confirmOverlay.classList.add('show'); };
+  window.confirmBack = () => { confirmOverlay.classList.remove('show'); switchScreen(gameScreen, selectScreen); };
+  window.cancelBack = () => { confirmOverlay.classList.remove('show'); };
+
+  function calcBoardSize() { return Math.floor(Math.min(window.innerWidth * 0.9, window.innerHeight * 0.55)); }
+
+  function drawBoard() {
+    const ctx = board.getContext('2d'); const bs = boardSize;
+    board.width = bs; board.height = bs; board.style.width = bs + 'px'; board.style.height = bs + 'px';
+    if (shuffled && placedCount < SIZE * SIZE) { ctx.globalAlpha = HINT_ALPHA; ctx.drawImage(boardImg, 0, 0, bs, bs); ctx.globalAlpha = 1; } else { ctx.globalAlpha = 1; ctx.drawImage(boardImg, 0, 0, bs, bs); }
+    if (linesShown) {
+      ctx.strokeStyle = 'rgba(0,0,0,.55)'; ctx.lineWidth = 2;
+      for (let i = 1; i < SIZE; i++) { const p = (bs / SIZE) * i; ctx.beginPath(); ctx.moveTo(p, 0); ctx.lineTo(p, bs); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0, p); ctx.lineTo(bs, p); ctx.stroke(); }
+    }
+  }
+
+  function createPieces() {
+    pieces.forEach(p => p.el.remove()); pieces = []; placedCount = 0;
+    const cs = cellSize;
+    for (let r = 0; r < SIZE; r++) {
+      for (let c = 0; c < SIZE; c++) {
+        const el = document.createElement('div'); el.className = 'piece'; el.style.width = cs + 'px'; el.style.height = cs + 'px';
+        el.style.backgroundImage = 'url(' + boardImg.toDataURL() + ')'; el.style.backgroundSize = (cs * SIZE) + 'px ' + (cs * SIZE) + 'px'; el.style.backgroundPosition = (-c * cs) + 'px ' + (-r * cs) + 'px';
+        el.style.display = 'none'; el.dataset.row = r; el.dataset.col = c; el.dataset.placed = '0'; el.dataset.scale = TRAY_SCALE;
+        tray.appendChild(el); pieces.push({ el, row: r, col: c, placed: false }); attachEvents(el);
+      }
+    }
+  }
+
+  function layoutTray(order) {
+    const cs = cellSize, scaled = cs * TRAY_SCALE, gap = 6; const totalW = tray.clientWidth || (boardSize + 16);
+    const perRow = Math.max(1, Math.floor((totalW - gap) / (scaled + gap))); const ord = order || pieces.slice();
+    ord.forEach((p, idx) => {
+      p.el.style.display = ''; const row = Math.floor(idx / perRow), col = idx % perRow;
+      const x = gap + col * (scaled + gap), y = gap + row * (scaled + gap); const el = p.el;
+      el.style.position = 'absolute'; el.style.left = '0px'; el.style.top = '0px'; el.style.transition = 'transform ' + SCALE_DURATION + 'ms ease';
+      el.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + TRAY_SCALE + ')'; el.dataset.trayX = x; el.dataset.trayY = y; el.dataset.scale = TRAY_SCALE;
+    });
+    const rows = Math.ceil(ord.length / perRow); tray.style.height = (rows * (scaled + gap) + gap) + 'px';
+  }
+
+  function shuffleArray(arr) {
+    const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+    let same = true; for (let i = 0; i < a.length; i++) { if (a[i].row !== Math.floor(i / SIZE) || a[i].col !== i % SIZE) { same = false; break; } }
+    if (same) return shuffleArray(arr); return a;
+  }
+
+  function attachEvents(el) {
+    el.addEventListener('pointerdown', onDown); el.addEventListener('pointermove', onMove); el.addEventListener('pointerup', onUp); el.addEventListener('pointercancel', onUp);
+  }
+
+  function onDown(e) {
+    const el = e.currentTarget; if (el.dataset.placed === '1' || !shuffled) return; e.preventDefault();
+    const piece = pieces.find(p => p.el === el); if (!piece) return;
+    dragging = piece; dragStarted = false; currentScale = parseFloat(el.dataset.scale) || TRAY_SCALE; overBoard = false;
+    const rect = el.getBoundingClientRect(); dragOffset.x = (e.clientX - rect.left) / currentScale; dragOffset.y = (e.clientY - rect.top) / currentScale;
+    startX = e.clientX; startY = e.clientY; el.style.zIndex = 1000; el.style.transition = 'none';
+    const left = e.clientX - dragOffset.x * currentScale, top = e.clientY - dragOffset.y * currentScale;
+    el.style.position = 'fixed'; el.style.left = '0px'; el.style.top = '0px'; el.style.transform = 'translate(' + left + 'px,' + top + 'px) scale(' + currentScale + ')';
+    el.setPointerCapture(e.pointerId);
+  }
+
+  function onMove(e) {
+    if (!dragging) return; e.preventDefault(); const dx = e.clientX - startX, dy = e.clientY - startY;
+    if (!dragStarted && Math.abs(dx) + Math.abs(dy) > 6) dragStarted = true; if (!dragStarted) return;
+    const boardRect = board.getBoundingClientRect();
+    const isOver = e.clientX >= boardRect.left && e.clientX <= boardRect.right && e.clientY >= boardRect.top && e.clientY <= boardRect.bottom;
+    if (isOver !== overBoard) { overBoard = isOver; currentScale = overBoard ? BOARD_SCALE : TRAY_SCALE; dragging.el.style.transition = 'transform ' + SCALE_DURATION + 'ms ease'; dragging.el.dataset.scale = currentScale; }
+    const left = e.clientX - dragOffset.x * currentScale, top = e.clientY - dragOffset.y * currentScale;
+    dragging.el.style.transform = 'translate(' + left + 'px,' + top + 'px) scale(' + currentScale + ')'; updateHighlight(e.clientX, e.clientY);
+  }
+
+  function updateHighlight(cx, cy) {
+    if (!dragging) { hideHighlight(); return; } const boardRect = board.getBoundingClientRect(); const piece = dragging;
+    const targetX = boardRect.left + piece.col * cellSize, targetY = boardRect.top + piece.row * cellSize;
+    const left = cx - dragOffset.x * currentScale, top = cy - dragOffset.y * currentScale;
+    const tol = cellSize * SNAP_TOLERANCE; const within = Math.abs(left - targetX) < tol && Math.abs(top - targetY) < tol;
+    if (within && overBoard) {
+      if (!highlightActive) { highlightEl.style.display = 'block'; highlightEl.style.left = targetX + 'px'; highlightEl.style.top = targetY + 'px'; highlightEl.style.width = cellSize + 'px'; highlightEl.style.height = cellSize + 'px'; highlightActive = true; }
+    } else { hideHighlight(); }
+  }
+
+  function hideHighlight() { if (highlightActive) { highlightEl.style.display = 'none'; highlightActive = false; } }
+
+  function onUp(e) {
+    if (!dragging) return; const piece = dragging; dragging = null; hideHighlight();
+    piece.el.style.zIndex = ''; piece.el.style.transition = 'transform ' + SCALE_DURATION + 'ms ease';
+    if (!dragStarted) { returnToTray(piece); return; }
+    const boardRect = board.getBoundingClientRect(); const left = e.clientX - dragOffset.x * currentScale, top = e.clientY - dragOffset.y * currentScale;
+    const targetX = boardRect.left + piece.col * cellSize, targetY = boardRect.top + piece.row * cellSize;
+    const tol = cellSize * SNAP_TOLERANCE; const over = e.clientX >= boardRect.left && e.clientX <= boardRect.right && e.clientY >= boardRect.top && e.clientY <= boardRect.bottom;
+    if (over && Math.abs(left - targetX) < tol && Math.abs(top - targetY) < tol) { placePiece(piece); } 
+    else { piece.el.classList.add('shake'); setTimeout(() => { piece.el.classList.remove('shake'); returnToTray(piece); }, 400); }
+  }
+
+  function returnToTray(piece) {
+    const el = piece.el; el.style.transition = 'transform ' + SCALE_DURATION + 'ms ease';
+    el.style.position = 'absolute'; el.style.left = '0px'; el.style.top = '0px'; el.dataset.scale = TRAY_SCALE;
+    el.style.transform = 'translate(' + el.dataset.trayX + 'px,' + el.dataset.trayY + 'px) scale(' + TRAY_SCALE + ')'; el.style.zIndex = '';
+  }
+
+  function placePiece(piece) {
+    const el = piece.el; el.dataset.placed = '1'; piece.placed = true; placedCount++; el.classList.add('placed');
+    const boardRect = board.getBoundingClientRect(); const x = boardRect.left + piece.col * cellSize, y = boardRect.top + piece.row * cellSize;
+    el.style.position = 'fixed'; el.style.left = '0px'; el.style.top = '0px'; el.style.transition = 'transform ' + SCALE_DURATION + 'ms ease'; el.dataset.scale = BOARD_SCALE;
+    el.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + BOARD_SCALE + ')'; el.style.boxShadow = 'none'; el.style.borderRadius = '0';
+    drawBoard(); if (placedCount === SIZE * SIZE) finishGame();
+  }
+
+  function finishGame() {
+    shuffled = false; linesShown = false; drawBoard();
+    setTimeout(() => {
+      const vw = window.innerWidth, vh = window.innerHeight; let s = Math.min(vw * 0.9, vh * 0.65);
+      winCanvas.width = s; winCanvas.height = s; winCanvas.style.width = s + 'px'; winCanvas.style.height = s + 'px';
+      winCanvas.getContext('2d').drawImage(boardImg, 0, 0, s, s); winOverlay.classList.add('show');
+    }, 350);
+  }
+
+  btnLines.addEventListener('click', () => { linesShown = true; drawBoard(); btnLines.disabled = true; btnShuffle.disabled = false; });
+  btnShuffle.addEventListener('click', () => { if (shuffled) return; shuffled = true; btnShuffle.disabled = true; drawBoard(); const order = shuffleArray(pieces); pieces.forEach(p => { p.el.style.display = ''; }); layoutTray(order); });
+  btnRestartWin.addEventListener('click', () => { winOverlay.classList.remove('show'); startGame(boardImg.originalDrawFunc); });
+
+  function init(imageDrawFunc) {
+    linesShown = false; shuffled = false; placedCount = 0; dragging = null; dragStarted = false; overBoard = false; hideHighlight(); tray.style.height = '0px';
+    boardSize = calcBoardSize(); cellSize = Math.floor(boardSize / SIZE); boardSize = cellSize * SIZE;
+    boardWrap.style.width = boardSize + 'px'; boardWrap.style.height = boardSize + 'px';
+    boardImg = imageDrawFunc(boardSize * 2); boardImg.originalDrawFunc = imageDrawFunc;
+    drawBoard(); btnLines.disabled = false; btnShuffle.disabled = true;
+    createPieces(); tray.style.width = '100%';
+  }
+
+  window.addEventListener('resize', () => { if (placedCount === 0 && !shuffled) { if (gameScreen.classList.contains('active')) init(boardImg.originalDrawFunc); } });
+  renderGallery();
+})();
+</script>
+</body>
+</html>

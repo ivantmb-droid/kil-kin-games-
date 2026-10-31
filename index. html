@@ -120,6 +120,7 @@
     ctx.fillStyle = '#e75480'; ctx.beginPath(); ctx.moveTo(cx - R * 0.08, cy + R * 0.22); ctx.lineTo(cx + R * 0.08, cy + R * 0.22); ctx.lineTo(cx, cy + R * 0.32); ctx.closePath(); ctx.fill();
     ctx.strokeStyle = '#2d2d2d'; ctx.lineWidth = R * 0.05; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(cx, cy + R * 0.32); ctx.lineTo(cx - R * 0.15, cy + R * 0.45); ctx.moveTo(cx, cy + R * 0.32); ctx.lineTo(cx + R * 0.15, cy + R * 0.45); ctx.stroke();
     ctx.lineWidth = R * 0.03; for (let side = -1; side <= 1; side += 2) { for (let i = -1; i <= 1; i++) { ctx.beginPath(); ctx.moveTo(cx + side * R * 0.25, cy + R * 0.35 + i * R * 0.1); ctx.lineTo(cx + side * R * 0.85, cy + R * 0.25 + i * R * 0.18); ctx.stroke(); } }
+    ctx.fillStyle = 'rgba(255,150,180,.5)'; ctx.beginPath(); ctx.ellipse(cx - R * 0.55, cy + R * 0.25, R * 0.15, R * 0.1, 0, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.ellipse(cx + R * 0.55, cy + R * 0.25, R * 0.15, R * 0.1, 0, 0, Math.PI * 2); ctx.fill();
     return c;
   }
   function drawHouse(size) {
@@ -194,13 +195,13 @@
       }; reader.readAsDataURL(file);
     });
   }
-    function startGame(imageDrawFunc) { switchScreen(selectScreen, gameScreen); init(imageDrawFunc); }
+
+  function startGame(imageDrawFunc) { switchScreen(selectScreen, gameScreen); init(imageDrawFunc); }
   window.askBack = () => { if (placedCount === SIZE * SIZE) window.goToTitle(); else confirmOverlay.classList.add('show'); };
   window.confirmBack = () => { confirmOverlay.classList.remove('show'); switchScreen(gameScreen, selectScreen); };
   window.cancelBack = () => { confirmOverlay.classList.remove('show'); };
 
   function calcBoardSize() { return Math.floor(Math.min(window.innerWidth * 0.9, window.innerHeight * 0.55)); }
-
   function drawBoard() {
     const ctx = board.getContext('2d'); const bs = boardSize;
     board.width = bs; board.height = bs; board.style.width = bs + 'px'; board.style.height = bs + 'px';
@@ -210,7 +211,6 @@
       for (let i = 1; i < SIZE; i++) { const p = (bs / SIZE) * i; ctx.beginPath(); ctx.moveTo(p, 0); ctx.lineTo(p, bs); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0, p); ctx.lineTo(bs, p); ctx.stroke(); }
     }
   }
-
   function createPieces() {
     pieces.forEach(p => p.el.remove()); pieces = []; placedCount = 0;
     const cs = cellSize;
@@ -223,7 +223,6 @@
       }
     }
   }
-
   function layoutTray(order) {
     const cs = cellSize, scaled = cs * TRAY_SCALE, gap = 6; const totalW = tray.clientWidth || (boardSize + 16);
     const perRow = Math.max(1, Math.floor((totalW - gap) / (scaled + gap))); const ord = order || pieces.slice();
@@ -235,97 +234,5 @@
     });
     const rows = Math.ceil(ord.length / perRow); tray.style.height = (rows * (scaled + gap) + gap) + 'px';
   }
-
   function shuffleArray(arr) {
-    const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
-    let same = true; for (let i = 0; i < a.length; i++) { if (a[i].row !== Math.floor(i / SIZE) || a[i].col !== i % SIZE) { same = false; break; } }
-    if (same) return shuffleArray(arr); return a;
-  }
-
-  function attachEvents(el) { el.addEventListener('pointerdown', onDown); el.addEventListener('pointermove', onMove); el.addEventListener('pointerup', onUp); el.addEventListener('pointercancel', onUp); }
-
-  function onDown(e) {
-    const el = e.currentTarget; if (el.dataset.placed === '1' || !shuffled) return; e.preventDefault();
-    const piece = pieces.find(p => p.el === el); if (!piece) return;
-    dragging = piece; dragStarted = false; currentScale = parseFloat(el.dataset.scale) || TRAY_SCALE; overBoard = false;
-    const rect = el.getBoundingClientRect(); dragOffset.x = (e.clientX - rect.left) / currentScale; dragOffset.y = (e.clientY - rect.top) / currentScale;
-    startX = e.clientX; startY = e.clientY; el.style.zIndex = 1000; el.style.transition = 'none';
-    const left = e.clientX - dragOffset.x * currentScale, top = e.clientY - dragOffset.y * currentScale;
-    el.style.position = 'fixed'; el.style.left = '0px'; el.style.top = '0px'; el.style.transform = 'translate(' + left + 'px,' + top + 'px) scale(' + currentScale + ')';
-    el.setPointerCapture(e.pointerId);
-  }
-
-  function onMove(e) {
-    if (!dragging) return; e.preventDefault(); const dx = e.clientX - startX, dy = e.clientY - startY;
-    if (!dragStarted && Math.abs(dx) + Math.abs(dy) > 6) dragStarted = true; if (!dragStarted) return;
-    const boardRect = board.getBoundingClientRect();
-    const isOver = e.clientX >= boardRect.left && e.clientX <= boardRect.right && e.clientY >= boardRect.top && e.clientY <= boardRect.bottom;
-    if (isOver !== overBoard) { overBoard = isOver; currentScale = overBoard ? BOARD_SCALE : TRAY_SCALE; dragging.el.style.transition = 'transform ' + SCALE_DURATION + 'ms ease'; dragging.el.dataset.scale = currentScale; }
-    const left = e.clientX - dragOffset.x * currentScale, top = e.clientY - dragOffset.y * currentScale;
-    dragging.el.style.transform = 'translate(' + left + 'px,' + top + 'px) scale(' + currentScale + ')'; updateHighlight(e.clientX, e.clientY);
-  }
-
-  function updateHighlight(cx, cy) {
-    if (!dragging) { hideHighlight(); return; } const boardRect = board.getBoundingClientRect(); const piece = dragging;
-    const targetX = boardRect.left + piece.col * cellSize, targetY = boardRect.top + piece.row * cellSize;
-    const left = cx - dragOffset.x * currentScale, top = cy - dragOffset.y * currentScale;
-    const tol = cellSize * SNAP_TOLERANCE; const within = Math.abs(left - targetX) < tol && Math.abs(top - targetY) < tol;
-    if (within && overBoard) {
-      if (!highlightActive) { highlightEl.style.display = 'block'; highlightEl.style.left = targetX + 'px'; highlightEl.style.top = targetY + 'px'; highlightEl.style.width = cellSize + 'px'; highlightEl.style.height = cellSize + 'px'; highlightActive = true; }
-    } else { hideHighlight(); }
-  }
-
-  function hideHighlight() { if (highlightActive) { highlightEl.style.display = 'none'; highlightActive = false; } }
-
-  function onUp(e) {
-    if (!dragging) return; const piece = dragging; dragging = null; hideHighlight();
-    piece.el.style.zIndex = ''; piece.el.style.transition = 'transform ' + SCALE_DURATION + 'ms ease';
-    if (!dragStarted) { returnToTray(piece); return; }
-    const boardRect = board.getBoundingClientRect(); const left = e.clientX - dragOffset.x * currentScale, top = e.clientY - dragOffset.y * currentScale;
-    const targetX = boardRect.left + piece.col * cellSize, targetY = boardRect.top + piece.row * cellSize;
-    const tol = cellSize * SNAP_TOLERANCE; const over = e.clientX >= boardRect.left && e.clientX <= boardRect.right && e.clientY >= boardRect.top && e.clientY <= boardRect.bottom;
-    if (over && Math.abs(left - targetX) < tol && Math.abs(top - targetY) < tol) { placePiece(piece); } else { piece.el.classList.add('shake'); setTimeout(() => { piece.el.classList.remove('shake'); returnToTray(piece); }, 400); }
-  }
-
-  function returnToTray(piece) {
-    const el = piece.el; el.style.transition = 'transform ' + SCALE_DURATION + 'ms ease';
-    el.style.position = 'absolute'; el.style.left = '0px'; el.style.top = '0px'; el.dataset.scale = TRAY_SCALE;
-    el.style.transform = 'translate(' + el.dataset.trayX + 'px,' + el.dataset.trayY + 'px) scale(' + TRAY_SCALE + ')'; el.style.zIndex = '';
-  }
-
-  function placePiece(piece) {
-    const el = piece.el; el.dataset.placed = '1'; piece.placed = true; placedCount++; el.classList.add('placed');
-    const boardRect = board.getBoundingClientRect(); const x = boardRect.left + piece.col * cellSize, y = boardRect.top + piece.row * cellSize;
-    el.style.position = 'fixed'; el.style.left = '0px'; el.style.top = '0px'; el.style.transition = 'transform ' + SCALE_DURATION + 'ms ease'; el.dataset.scale = BOARD_SCALE;
-    el.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + BOARD_SCALE + ')'; el.style.boxShadow = 'none'; el.style.borderRadius = '0';
-    drawBoard(); if (placedCount === SIZE * SIZE) finishGame();
-  }
-
-  function finishGame() {
-    shuffled = false; linesShown = false; drawBoard();
-    setTimeout(() => {
-      const vw = window.innerWidth, vh = window.innerHeight; let s = Math.min(vw * 0.9, vh * 0.65);
-      winCanvas.width = s; winCanvas.height = s; winCanvas.style.width = s + 'px'; winCanvas.style.height = s + 'px';
-      winCanvas.getContext('2d').drawImage(boardImg, 0, 0, s, s); winOverlay.classList.add('show');
-    }, 350);
-  }
-
-  btnLines.addEventListener('click', () => { linesShown = true; drawBoard(); btnLines.disabled = true; btnShuffle.disabled = false; });
-  btnShuffle.addEventListener('click', () => { if (shuffled) return; shuffled = true; btnShuffle.disabled = true; drawBoard(); const order = shuffleArray(pieces); pieces.forEach(p => { p.el.style.display = ''; }); layoutTray(order); });
-  btnRestartWin.addEventListener('click', () => { winOverlay.classList.remove('show'); startGame(boardImg.originalDrawFunc); });
-
-  function init(imageDrawFunc) {
-    linesShown = false; shuffled = false; placedCount = 0; dragging = null; dragStarted = false; overBoard = false; hideHighlight(); tray.style.height = '0px';
-    boardSize = calcBoardSize(); cellSize = Math.floor(boardSize / SIZE); boardSize = cellSize * SIZE;
-    boardWrap.style.width = boardSize + 'px'; boardWrap.style.height = boardSize + 'px';
-    boardImg = imageDrawFunc(boardSize * 2); boardImg.originalDrawFunc = imageDrawFunc;
-    drawBoard(); btnLines.disabled = false; btnShuffle.disabled = true;
-    createPieces(); tray.style.width = '100%';
-  }
-
-  window.addEventListener('resize', () => { if (placedCount === 0 && !shuffled) { if (gameScreen.classList.contains('active')) init(boardImg.originalDrawFunc); } });
-  renderGallery();
-})();
-</script>
-</body>
-</html>
+    const a = arr.slice(); f

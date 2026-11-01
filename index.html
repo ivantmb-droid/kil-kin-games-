@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F4F1EA">
+<title>KIL'KIN Games — маленькие шаги, большие приключения</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#F4F1EA;--paper-dark:#E8E8E6;--green:#2c4c3b;--green-dark:#1a2e23;--sage:#90A4AE;--sage-dark:#607D8B;--sand:#d6a978;--sand-dark:#b5895b;--shadow:0 6px 18px rgba(44,76,59,.12)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--paper);font-family:Nunito,system-ui,sans-serif;color:var(--green);user-select:none}
+button{font:900 18px Nunito,system-ui,sans-serif;border:0;border-radius:20px;color:#fff;cursor:pointer;touch-action:manipulation;transition:transform .12s,filter .12s}
+button:active{transform:translateY(2px);filter:brightness(.96)}
+button:focus-visible,.card:focus-visible{outline:3px solid #e0a84e;outline-offset:3px}
+button:disabled{opacity:.45;cursor:not-allowed}
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .24s,visibility .24s;background:var(--paper);z-index:1}
+.screen.active{opacity:1;visibility:visible;pointer-events:auto;z-index:10}
+#titleScreen{background:var(--paper-dark);padding:24px}
+.logo{display:block;width:min(70vw,300px);max-height:28vh;object-fit:contain;margin-bottom:16px;border-radius:14px}
+.tagline{font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#879185;font-weight:900;margin-bottom:24px}
+.btn-play{background:var(--green);box-shadow:0 6px 0 var(--green-dark);padding:18px 64px;font-size:22px}
+.games-word{font-size:26px;font-weight:900;letter-spacing:3px;text-transform:uppercase;margin-top:20px}
+.btn-back{position:absolute;top:max(14px,env(safe-area-inset-top));left:14px;z-index:30;background:var(--sage);box-shadow:0 4px 0 var(--sage-dark);padding:11px 19px;font-size:15px}
+#btnMute{position:fixed;top:max(14px,env(safe-area-inset-top));right:16px;z-index:40;background:var(--sand);box-shadow:0 4px 0 var(--sand-dark);border-radius:50%;width:50px;height:50px;padding:0;font-size:22px;display:flex;align-items:center;justify-content:center}
+#btnMusic{background:#fff;color:var(--green);border:2px solid #d9d5cc;box-shadow:0 3px 0 #d9d5cc;padding:10px 16px;font-size:14px;margin-bottom:12px}
+#selectScreen{justify-content:flex-start;overflow-y:auto;overscroll-behavior:contain;padding:76px 16px max(24px,env(safe-area-inset-bottom))}
+.select-title{font-size:clamp(22px,5vw,28px);font-weight:900;margin:0 0 8px;text-align:center}
+.brand-note{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:#7d887d;margin:0 0 10px;font-weight:900}
+.progress-note{font-size:13px;color:#778477;margin:0 0 12px;font-weight:800}
+.collection-tabs,.difficulty{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:0 0 14px}
+.collection-tabs button{font-size:13px;padding:8px 12px;background:#e8e5dc;color:var(--green);border:1px solid #d8d2c5;box-shadow:none}
+.collection-tabs button.active{background:var(--green);color:#fff}
+.difficulty button{background:#fff;color:var(--green);border:2px solid #d9d5cc;padding:9px 15px;font-size:15px;box-shadow:0 3px 0 #d9d5cc}
+.difficulty button.active{background:var(--green);border-color:var(--green);color:#fff;box-shadow:0 3px 0 var(--green-dark)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;width:min(100%,520px);margin:0 auto}
+.card{background:#fff;border:2px solid #e0dcd3;border-radius:18px;overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;cursor:pointer;position:relative}
+.card:active{transform:scale(.975)}
+.card img{display:block;width:100%;aspect-ratio:1;object-fit:cover;background:#f0ebe3}
+.card span{padding:9px 8px 11px;font-size:16px;font-weight:900;text-align:center}
+.card .stars{position:absolute;top:8px;right:8px;background:rgba(255,255,255,.92);border-radius:12px;padding:3px 8px;font-size:13px;font-weight:900;color:#c9a227}
+.btn-upload{background:var(--sand);box-shadow:0 4px 0 var(--sand-dark);padding:13px 22px;margin:18px 0 4px;font-size:16px}
+#gameScreen{justify-content:flex-start;gap:8px;padding:8px 10px max(8px,env(safe-area-inset-bottom));overflow:hidden}
+#gameHeader{width:100%;min-height:42px;display:flex;align-items:center;justify-content:center;padding:0 70px}
+#levelLabel{font-size:15px;font-weight:900;text-align:center}
+#timerLabel{font-size:13px;font-weight:900;color:#748275;text-align:center;margin-top:2px}
+#boardWrap{position:relative;margin:0 auto}
+#board{display:block;border-radius:15px;background:#fff;box-shadow:0 7px 22px rgba(44,76,59,.15)}
+#buttons{display:flex;justify-content:center;gap:10px;padding:2px 0}
+#btnLines{background:var(--sage);box-shadow:0 4px 0 var(--sage-dark);padding:10px 18px;font-size:15px}
+#btnShuffle{background:var(--sand);box-shadow:0 4px 0 var(--sand-dark);padding:10px 18px;font-size:15px}
+.game-tools{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.game-tools label{font-size:12px;font-weight:800;color:#68786b;background:#fff;border:1px solid #e0dcd3;padding:8px 10px;border-radius:14px}
+.game-tools input{accent-color:var(--green)}
+#tray{position:relative;flex:1 1 auto;width:min(100%,760px);min-height:90px;max-height:38vh;overflow:auto;border-radius:14px;background:rgba(255,255,255,.4);padding:6px;touch-action:pan-y}
+.piece{position:absolute;border-radius:8px;background-repeat:no-repeat;box-shadow:0 3px 10px rgba(0,0,0,.18);touch-action:none;cursor:grab;transform-origin:top left}
+.piece:active{cursor:grabbing}
+.piece.shake{animation:shake .34s ease}
+@keyframes shake{0%,100%{translate:0 0}20%{translate:-6px 0}40%{translate:6px 0}60%{translate:-4px 0}80%{translate:4px 0}}
+#highlight{position:fixed;pointer-events:none;border-radius:6px;background:rgba(44,76,59,.2);border:3px solid var(--green);z-index:999;display:none}
+.overlay{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:20px;z-index:1000}
+#win{background:rgba(38,53,44,.93)}
+#win.show,#confirm.show,#loading.show{display:flex}
+#winTitle{color:#f4f1ea;font-size:clamp(26px,6.5vw,36px);font-weight:900;text-align:center;animation:winBounce .65s cubic-bezier(.2,1.4,.4,1) both}
+#winStats{color:#d5e0d6;font-size:15px;font-weight:800}
+#winCanvas{width:min(76vw,400px,48vh);height:min(76vw,400px,48vh);border:4px solid #fff;border-radius:18px;box-shadow:0 10px 35px rgba(0,0,0,.3);background:#fff}
+#btnRestartWin{background:var(--sand);box-shadow:0 5px 0 var(--sand-dark);padding:14px 25px;font-size:17px}
+#confirm{background:rgba(44,76,59,.72)}
+#confirmBox{background:var(--paper);padding:26px 22px;border-radius:22px;text-align:center;width:min(100%,330px);box-shadow:0 10px 30px rgba(0,0,0,.2)}
+#confirmBox p{font-size:19px;font-weight:900;margin:0 0 22px}
+.confirm-btns{display:flex;gap:12px;justify-content:center}
+.confirm-btns button{font-size:16px;padding:12px 21px}
+.btn-yes{background:#d85b4d;box-shadow:0 4px 0 #ad4035}
+.btn-no{background:var(--sage);box-shadow:0 4px 0 var(--sage-dark)}
+#loading{background:rgba(44,76,59,.82);color:var(--paper);font-size:21px;font-weight:900;z-index:2000}
+#confettiCanvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:1100}
+#easterEgg{position:fixed;z-index:950;display:none;align-items:center;gap:7px;pointer-events:none;font-size:clamp(36px,9vw,58px);filter:drop-shadow(0 4px 4px rgba(0,0,0,.16))}
+#easterEgg.show{display:flex;animation:peek 3.1s ease-in-out both}
+#easterEgg .speech{font:900 16px Nunito,system-ui,sans-serif;color:var(--green);background:#fff;border:2px solid #e6dfd1;border-radius:18px;padding:7px 12px;box-shadow:var(--shadow)}
+@keyframes peek{0%{transform:translateX(-125%)}18%,68%{transform:translateX(0)}100%{transform:translateX(-125%)}}
+@keyframes winBounce{0%{transform:scale(.3) rotate(-8deg);opacity:0}75%{transform:scale(1.08) rotate(2deg)}100%{transform:scale(1);opacity:1}}
+@media(max-height:650px){#gameScreen{gap:5px}#tray{max-height:30vh}}
+@media(min-width:700px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<section id="titleScreen" class="screen active" aria-label="Главное меню">
+  <img class="logo" id="logoImg" src="images/logo.jpg" alt="KIL'KIN"
+       onerror="this.style.display='none'">
+  <div class="tagline">little steps · big adventures</div>
+  <button id="btnMusic" type="button" aria-pressed="false">♫ Музыка: выкл.</button>
+  <button class="btn-play" id="btnPlay">Играть</button>
+  <div class="games-word">Games</div>
+</section>
+<button id="btnMute" type="button" aria-label="Звук">🔊</button>
+
+<section id="selectScreen" class="screen" aria-label="Выбор картинки">
+  <button class="btn-back" id="btnSelectBack">← Назад</button>
+  <h1 class="select-title">Выбери картинку</h1>
+  <div class="brand-note">маленькие шаги · большие приключения</div>
+  <div class="progress-note" id="progressNote">Твоя коллекция ждёт первых звёздочек</div>
+  <div class="collection-tabs" id="collectionTabs">
+    <button class="active" data-collection="all">Все</button>
+    <button data-collection="home">Дом и друзья</button>
+    <button data-collection="nature">Природа</button>
+    <button data-collection="travel">Путешествия</button>
+  </div>
+  <div class="difficulty" role="group" aria-label="Сложность">
+    <button type="button" data-size="2">4 детали</button>
+    <button type="button" data-size="3" class="active">9 деталей</button>
+    <button type="button" data-size="4">16 деталей</button>
+    <button type="button" data-size="5">25 деталей</button>
+  </div>
+  <div class="grid" id="galleryGrid"></div>
+  <button class="btn-upload" id="btnUpload">📷 Своё фото</button>
+  <input type="file" id="fileInput" accept="image/*" hidden>
+</section>
+
+<section id="gameScreen" class="screen" aria-label="Игра">
+  <button class="btn-back" id="btnGameBack">← Назад</button>
+  <div id="gameHeader"><div>
+    <div id="levelLabel">Пазл · 9 деталей</div>
+    <div id="timerLabel">00:00</div>
+  </div></div>
+  <div id="boardWrap"><canvas id="board"></canvas></div>
+  <div id="buttons">
+    <button id="btnLines" type="button">Показать линии</button>
+    <button id="btnShuffle" type="button" disabled>Смешать</button>
+  </div>
+  <div class="game-tools">
+    <label><input id="timerToggle" type="checkbox"> Засечь время</label>
+  </div>
+  <div id="tray" aria-label="Детали пазла"></div>
+</section>
+
+<div id="highlight" aria-hidden="true"></div>
+<canvas id="confettiCanvas" aria-hidden="true"></canvas>
+<div id="easterEgg" aria-hidden="true"><span class="creature">🐦</span><span class="speech">Ку-ку!</span></div>
+<div id="loading" class="overlay" role="status">Загружаем…</div>
+<div id="win" class="overlay" role="dialog" aria-modal="true">
+  <div id="winTitle">Ура! Победа!</div>
+  <div id="winStats"></div>
+  <canvas id="winCanvas"></canvas>
+  <button id="btnRestartWin" type="button">Выбрать другую картинку</button>
+</div>
+<div id="confirm" class="overlay" role="dialog" aria-modal="true">
+  <div id="confirmBox">
+    <p id="confirmText">Точно хочешь выйти?<br>Пазл ещё не собран.</p>
+    <div class="confirm-btns">
+      <button class="btn-yes" id="btnConfirmYes" type="button">Да</button>
+      <button class="btn-no" id="btnConfirmNo" type="button">Нет</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+const SNAP_TOLERANCE = 0.7;
+const $ = id => document.getElementById(id);
+
+const galleryData = [
+  { id:'kitten',  name:'Котёнок Кили', src:'images/kitten.jpg',  collection:'home' },
+  { id:'puppy',   name:'Щенок Бим',    src:'images/puppy.jpg',   collection:'home' },
+  { id:'house',   name:'Домик',        src:'images/house.jpg',   collection:'home' },
+  { id:'cow',     name:'Коровка',      src:'images/cow.jpg',     collection:'nature' },
+  { id:'balloon', name:'Воздушный шар',src:'images/balloon.jpg', collection:'nature' },
+  { id:'car',     name:'Машинка',      src:'images/car.jpg',     collection:'travel' },
+  { id:'plane',   name:'Самолётик',    src:'images/plane.jpg',   collection:'travel' }
+];
+
+const screens = { title:$('titleScreen'), select:$('selectScreen'), game:$('gameScreen') };
+const galleryGrid = $('galleryGrid');
+const board = $('board');
+const boardWrap = $('boardWrap');
+const tray = $('tray');
+const highlight = $('highlight');
+const loading = $('loading');
+const win = $('win');
+const confirmDialog = $('confirm');
+const fileInput = $('fileInput');
+const btnLines = $('btnLines');
+const btnShuffle = $('btnShuffle');
+const winCanvas = $('winCanvas');
+const levelLabel = $('levelLabel');
+
+let puzzleSize = 3, boardSize = 0, cellSize = 0;
+let boardImg = null;      // full color source canvas
+let contourImg = null;    // soft contour version
+let pieces = [], placedCount = 0, placedSet = new Set();
+let linesShown = false, shuffled = false;
+let dragging = null, dragPointerId = null, dragOffset = {x:0,y:0}, startPointer = {x:0,y:0}, dragStarted = false;
+let currentImageId = null, audioCtx = null, resizeTimer = null, collectionFilter = 'all';
+let gameStartedAt = 0, gameClock = null, elapsedSeconds = 0;
+let trayScale = 0.5;
+let completedGames = Number(localStorage.getItem('kilkinCompleted') || 0);
+let earnedStars = Number(localStorage.getItem('kilkinStars') || 0);
+let completedMap = {};
+try { completedMap = JSON.parse(localStorage.getItem('kilkinCompletedMap') || '{}') || {}; } catch (_) {}
+
+/* ---- audio ---- */
+let isMuted = localStorage.getItem('kilkinMuted') === '1';
+let musicOn = false, musicWanted = localStorage.getItem('kilkinMusicWanted') === '1';
+let melodyAudio = null;
+
+function initAudio() {
+  try {
+    if (!audioCtx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      audioCtx = new AC();
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume().catch(()=>{});
+  } catch (_) { audioCtx = null; }
+}
+function tone(freq, duration=0.12, type='sine', volume=0.07, delay=0) {
+  if (!audioCtx || isMuted) return;
+  try {
+    const start = audioCtx.currentTime + delay;
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, start);
+    g.gain.setValueAtTime(Math.max(0.0001, volume), start);
+    g.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(start); o.stop(start + duration + 0.02);
+  } catch (_) {}
+}
+const soundClick = () => { initAudio(); if (!isMuted) tone(760,.08); };
+const soundPickup = () => { if (!isMuted) tone(560,.07,'triangle',.045); };
+const soundCorrect = () => { if (!isMuted) { tone(523.25,.11); tone(659.25,.13,'sine',.07,.09); } };
+const soundError = () => { if (!isMuted) tone(190,.15,'sine',.035); };
+const soundWin = () => { if (!isMuted) [523.25,659.25,783.99,1046.5].forEach((n,i)=>tone(n,.2,'sine',.075,i*.14)); };
+const soundPop = () => { if (!isMuted) { tone(180,.12,'triangle',.07); tone(620,.08,'sine',.045,.08); } };
+
+function ensureMelody() {
+  if (melodyAudio) return melodyAudio;
+  melodyAudio = new Audio('sounds/melody.wav');
+  melodyAudio.loop = true;
+  melodyAudio.volume = 0.35;
+  melodyAudio.preload = 'auto';
+  return melodyAudio;
+}
+function startMusic() {
+  if (isMuted) return;
+  initAudio();
+  const a = ensureMelody();
+  a.currentTime = 0;
+  const p = a.play();
+  if (p && p.catch) p.catch(()=>{});
+  musicOn = true; musicWanted = true;
+  localStorage.setItem('kilkinMusicWanted','1');
+  $('btnMusic').textContent = '♫ Музыка: вкл.';
+  $('btnMusic').setAttribute('aria-pressed','true');
+}
+function stopMusic() {
+  if (melodyAudio) { melodyAudio.pause(); }
+  musicOn = false;
+  $('btnMusic').textContent = '♫ Музыка: выкл.';
+  $('btnMusic').setAttribute('aria-pressed','false');
+}
+function toggleMusic() {
+  if (musicOn) { stopMusic(); musicWanted = false; localStorage.setItem('kilkinMusicWanted','0'); }
+  else startMusic();
+}
+function applyMuteUI() { $('btnMute').textContent = isMuted ? '🔇' : '🔊'; }
+function toggleMute() {
+  isMuted = !isMuted;
+  localStorage.setItem('kilkinMuted', isMuted ? '1' : '0');
+  applyMuteUI();
+  if (isMuted) stopMusic();
+  else if (musicWanted) startMusic();
+}
+
+/* ---- screens ---- */
+function showScreen(name) {
+  Object.values(screens).forEach(s => s.classList.remove('active'));
+  screens[name].classList.add('active');
+}
+function closeOverlays() { win.classList.remove('show'); confirmDialog.classList.remove('show'); }
+function goToTitle() {
+  clearInterval(gameClock); stopEaster(); stopConfetti(); closeOverlays();
+  showScreen('title');
+  if (musicWanted && !isMuted) startMusic();
+}
+function goToSelect() {
+  clearInterval(gameClock); stopEaster(); stopConfetti(); closeOverlays();
+  showScreen('select'); renderGallery();
+}
+function updateProgress() {
+  const stars = '★'.repeat(Math.min(earnedStars,12)) || '—';
+  $('progressNote').textContent = `Собрано пазлов: ${completedGames} · звёздочки: ${stars}`;
+}
+
+function renderGallery() {
+  galleryGrid.replaceChildren();
+  galleryData.filter(item => collectionFilter==='all' || item.collection===collectionFilter)
+    .forEach(item => {
+      const card = document.createElement('button');
+      card.type = 'button'; card.className = 'card';
+      card.setAttribute('aria-label', 'Собрать пазл: ' + item.name);
+      const img = document.createElement('img');
+      img.src = item.src; img.alt = item.name;
+      const label = document.createElement('span');
+      label.textContent = item.name;
+      card.append(img, label);
+      const done = completedMap[item.id];
+      if (done) {
+        const st = document.createElement('div');
+        st.className = 'stars';
+        st.textContent = '★'.repeat(Math.min(done,3));
+        card.appendChild(st);
+      }
+      card.addEventListener('click', () => { soundClick(); startGame(item.src, item.id); });
+      galleryGrid.appendChild(card);
+    });
+}
+
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('load'));
+    img.src = src;
+  });
+}
+
+/** Soft contour: washed grayscale so shape is readable but not a color cheat-sheet */
+function makeContour(srcCanvas) {
+  const w = srcCanvas.width, h = srcCanvas.height;
+  const out = document.createElement('canvas');
+  out.width = w; out.height = h;
+  const ctx = out.getContext('2d');
+  ctx.drawImage(srcCanvas, 0, 0);
+  const img = ctx.getImageData(0, 0, w, h);
+  const d = img.data;
+  // build grayscale
+  const g = new Float32Array(w * h);
+  for (let i = 0, p = 0; i < d.length; i += 4, p++) {
+    g[p] = 0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2];
+  }
+  // soft edges via simple gradient magnitude, then blend to paper
+  for (let y = 1; y < h - 1; y++) {
+    for (let x = 1; x < w - 1; x++) {
+      const i = y * w + x;
+      const gx = g[i-1] - g[i+1];
+      const gy = g[i-w] - g[i+w];
+      const edge = Math.min(255, Math.sqrt(gx*gx + gy*gy) * 1.8);
+      // paper base + soft ink lines
+      const paper = 236;
+      const v = paper - edge * 0.55;
+      const o = i * 4;
+      d[o] = d[o+1] = d[o+2] = v;
+      d[o+3] = 255;
+    }
+  }
+  // fade border rows
+  for (let x = 0; x < w; x++) {
+    for (const y of [0, h-1]) {
+      const o = (y * w + x) * 4;
+      d[o] = d[o+1] = d[o+2] = 236; d[o+3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  return out;
+}
+
+async function prepareBoardImage(src) {
+  const img = await loadImage(src);
+  const side = Math.min(img.naturalWidth, img.naturalHeight);
+  const canvas = document.createElement('canvas');
+  const out = Math.min(1000, Math.max(side, 600));
+  canvas.width = canvas.height = out;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, (img.naturalWidth-side)/2, (img.naturalHeight-side)/2, side, side, 0, 0, out, out);
+  return canvas;
+}
+
+function loadUserImage(file) {
+  if (!file || !file.type || !file.type.startsWith('image/')) {
+    alert('Выбери файл изображения.'); fileInput.value=''; return;
+  }
+  if (file.size > 20*1024*1024) { alert('Файл слишком большой (до 20 МБ).'); fileInput.value=''; return; }
+  loading.classList.add('show');
+  const url = URL.createObjectURL(file);
+  prepareBoardImage(url).then(canvas => {
+    URL.revokeObjectURL(url);
+    loading.classList.remove('show');
+    fileInput.value = '';
+    currentImageId = 'custom';
+    boardImg = canvas;
+    contourImg = makeContour(canvas);
+    showScreen('game');
+    initGameGeometry();
+  }).catch(() => {
+    URL.revokeObjectURL(url);
+    loading.classList.remove('show');
+    fileInput.value = '';
+    alert('Не удалось обработать фото.');
+  });
+}
+
+async function startGame(src, id) {
+  stopEaster();
+  loading.classList.add('show');
+  try {
+    boardImg = await prepareBoardImage(src);
+    contourImg = makeContour(boardImg);
+    currentImageId = id;
+    loading.classList.remove('show');
+    showScreen('game');
+    initGameGeometry();
+  } catch (e) {
+    loading.classList.remove('show');
+    alert('Не удалось загрузить картинку.');
+  }
+}
+
+function calcBoardSize() {
+  const header = $('gameHeader').getBoundingClientRect().height || 42;
+  const controls = $('buttons').getBoundingClientRect().height || 48;
+  const h = Math.max(150, window.innerHeight - header - controls - 160);
+  const w = Math.max(150, Math.min(window.innerWidth - 24, window.innerHeight * .78));
+  return Math.floor(Math.min(w, h));
+}
+
+function drawBoard() {
+  if (!boardImg || !boardSize) return;
+  const ctx = board.getContext('2d');
+  board.width = boardSize; board.height = boardSize;
+  board.style.width = boardSize + 'px'; board.style.height = boardSize + 'px';
+  ctx.clearRect(0, 0, boardSize, boardSize);
+
+  if (!shuffled) {
+    // before shuffle: show full color preview
+    ctx.drawImage(boardImg, 0, 0, boardSize, boardSize);
+  } else {
+    // after shuffle: soft contour only
+    ctx.drawImage(contourImg || boardImg, 0, 0, boardSize, boardSize);
+    // paint all placed pieces in full color
+    const srcCell = boardImg.width / puzzleSize;
+    placedSet.forEach(key => {
+      const [row, col] = key.split(',').map(Number);
+      ctx.drawImage(
+        boardImg,
+        col * srcCell, row * srcCell, srcCell, srcCell,
+        col * cellSize, row * cellSize, cellSize, cellSize
+      );
+    });
+  }
+
+  if (linesShown) {
+    ctx.strokeStyle = 'rgba(44,76,59,.4)';
+    ctx.lineWidth = Math.max(1.5, boardSize / 300);
+    for (let i = 1; i < puzzleSize; i++) {
+      const p = cellSize * i;
+      ctx.beginPath(); ctx.moveTo(p, 0); ctx.lineTo(p, boardSize); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, p); ctx.lineTo(boardSize, p); ctx.stroke();
+    }
+  }
+}
+
+function trayScaleForSize() {
+  // smaller pieces for more tiles so 2–4 rows fit
+  if (puzzleSize <= 2) return 0.62;
+  if (puzzleSize === 3) return 0.52;
+  if (puzzleSize === 4) return 0.42;
+  return 0.36;
+}
+
+function createPieces() {
+  pieces.forEach(p => p.el.remove());
+  pieces = []; placedCount = 0; placedSet.clear();
+  const cs = cellSize;
+  const imageUrl = boardImg.toDataURL('image/jpeg', 0.9);
+  for (let row = 0; row < puzzleSize; row++) {
+    for (let col = 0; col < puzzleSize; col++) {
+      const el = document.createElement('div');
+      el.className = 'piece';
+      el.style.width = cs + 'px';
+      el.style.height = cs + 'px';
+      el.style.backgroundImage = 'url("' + imageUrl + '")';
+      el.style.backgroundSize = boardSize + 'px ' + boardSize + 'px';
+      el.style.backgroundPosition = (-col * cs) + 'px ' + (-row * cs) + 'px';
+      el.style.display = 'none';
+      el.dataset.row = row; el.dataset.col = col;
+      tray.appendChild(el);
+      const piece = { el, row, col, placed: false };
+      pieces.push(piece);
+      el.addEventListener('pointerdown', onPointerDown);
+      el.addEventListener('pointermove', onPointerMove);
+      el.addEventListener('pointerup', onPointerUp);
+      el.addEventListener('pointercancel', onPointerCancel);
+      el.addEventListener('lostpointercapture', onLostPointerCapture);
+    }
+  }
+}
+
+function shuffleArray(array) {
+  const result = array.slice();
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  if (result.every((p, i) => p.row === Math.floor(i / puzzleSize) && p.col === i % puzzleSize)) {
+    [result[0], result[1]] = [result[1], result[0]];
+  }
+  return result;
+}
+
+function layoutTray(order) {
+  trayScale = trayScaleForSize();
+  const scaled = cellSize * trayScale;
+  const gap = 8;
+  const width = Math.max(120, tray.clientWidth - 12);
+  // aim for 2–4 rows
+  let perRow = Math.max(1, Math.floor((width + gap) / (scaled + gap)));
+  const total = order.length;
+  // prefer 2-4 rows if possible
+  if (total > 1) {
+    for (let rows = 2; rows <= 4; rows++) {
+      const cols = Math.ceil(total / rows);
+      if (cols * (scaled + gap) - gap <= width + 4) {
+        perRow = cols;
+        break;
+      }
+    }
+  }
+  order.forEach((piece, index) => {
+    const row = Math.floor(index / perRow), col = index % perRow;
+    const x = gap + col * (scaled + gap);
+    const y = gap + row * (scaled + gap);
+    const el = piece.el;
+    el.style.display = 'block';
+    el.style.position = 'absolute';
+    el.style.left = '0';
+    el.style.top = '0';
+    el.style.zIndex = '';
+    el.style.transition = 'transform 160ms ease';
+    el.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + trayScale + ')';
+    el.dataset.trayX = x;
+    el.dataset.trayY = y;
+  });
+  const rows = Math.ceil(order.length / perRow);
+  tray.style.height = Math.max(90, rows * (scaled + gap) + gap + 10) + 'px';
+}
+
+function initGameGeometry() {
+  cancelDrag();
+  linesShown = false; shuffled = false;
+  placedCount = 0; placedSet.clear();
+  tray.replaceChildren(); tray.style.height = '90px';
+  boardSize = calcBoardSize();
+  cellSize = Math.floor(boardSize / puzzleSize);
+  boardSize = cellSize * puzzleSize;
+  boardWrap.style.width = boardSize + 'px';
+  boardWrap.style.height = boardSize + 'px';
+  levelLabel.textContent = 'Пазл · ' + (puzzleSize * puzzleSize) + ' деталей';
+  elapsedSeconds = 0; clearInterval(gameClock);
+  $('timerLabel').textContent = '00:00'; gameStartedAt = 0;
+  drawBoard(); createPieces();
+  btnLines.disabled = false; btnLines.textContent = 'Показать линии';
+  btnShuffle.disabled = true;
+}
+
+function hideHighlight() { highlight.style.display = 'none'; }
+function cancelDrag() {
+  if (dragging && dragPointerId !== null) {
+    try { if (dragging.el.hasPointerCapture(dragPointerId)) dragging.el.releasePointerCapture(dragPointerId); } catch (_) {}
+  }
+  if (dragging && !dragging.placed) returnToTray(dragging);
+  dragging = null; dragPointerId = null; dragStarted = false; hideHighlight();
+}
+
+function onPointerDown(event) {
+  const el = event.currentTarget;
+  if (dragging || !shuffled || (event.button !== 0 && event.pointerType === 'mouse')) return;
+  event.preventDefault();
+  const piece = pieces.find(p => p.el === el && !p.placed);
+  if (!piece) return;
+  dragging = piece; dragPointerId = event.pointerId; dragStarted = false;
+  const rect = el.getBoundingClientRect();
+  // offset in unscaled piece coords
+  dragOffset.x = (event.clientX - rect.left) / trayScale;
+  dragOffset.y = (event.clientY - rect.top) / trayScale;
+  startPointer = { x: event.clientX, y: event.clientY };
+  el.style.zIndex = '1000';
+  el.style.transition = 'none';
+  // fixed positioning with top-left origin; keep tray scale while dragging
+  const left = event.clientX - dragOffset.x * trayScale;
+  const top = event.clientY - dragOffset.y * trayScale;
+  el.style.position = 'fixed';
+  el.style.left = '0';
+  el.style.top = '0';
+  el.style.transform = 'translate(' + left + 'px,' + top + 'px) scale(' + trayScale + ')';
+  try { el.setPointerCapture(event.pointerId); } catch (_) {}
+  soundPickup();
+}
+
+function onPointerMove(event) {
+  if (!dragging || event.pointerId !== dragPointerId) return;
+  event.preventDefault();
+  const dx = event.clientX - startPointer.x, dy = event.clientY - startPointer.y;
+  if (!dragStarted && Math.hypot(dx, dy) > 5) dragStarted = true;
+  if (!dragStarted) return;
+  const left = event.clientX - dragOffset.x * trayScale;
+  const top = event.clientY - dragOffset.y * trayScale;
+  dragging.el.style.transform = 'translate(' + left + 'px,' + top + 'px) scale(' + trayScale + ')';
+  updateHighlight(event.clientX, event.clientY, left, top);
+}
+
+function updateHighlight(pointerX, pointerY, left, top) {
+  if (!dragging) { hideHighlight(); return; }
+  const rect = board.getBoundingClientRect();
+  // target is full-size cell on board
+  const targetX = rect.left + dragging.col * cellSize;
+  const targetY = rect.top + dragging.row * cellSize;
+  const withinBoard = pointerX >= rect.left && pointerX <= rect.right && pointerY >= rect.top && pointerY <= rect.bottom;
+  // compare using the visual top-left of the scaled piece vs target
+  // allow snap when finger is near the correct cell
+  const fingerInCell =
+    pointerX >= targetX - cellSize * 0.15 && pointerX <= targetX + cellSize * 1.15 &&
+    pointerY >= targetY - cellSize * 0.15 && pointerY <= targetY + cellSize * 1.15;
+  if (withinBoard && fingerInCell) {
+    highlight.style.display = 'block';
+    highlight.style.left = targetX + 'px';
+    highlight.style.top = targetY + 'px';
+    highlight.style.width = cellSize + 'px';
+    highlight.style.height = cellSize + 'px';
+  } else hideHighlight();
+}
+
+function onPointerUp(event) {
+  if (!dragging || event.pointerId !== dragPointerId) return;
+  const piece = dragging;
+  const wasDragged = dragStarted;
+  const rect = board.getBoundingClientRect();
+  const targetX = rect.left + piece.col * cellSize;
+  const targetY = rect.top + piece.row * cellSize;
+  const inside = event.clientX >= rect.left && event.clientX <= rect.right &&
+                 event.clientY >= rect.top && event.clientY <= rect.bottom;
+  const near =
+    event.clientX >= targetX - cellSize * SNAP_TOLERANCE &&
+    event.clientX <= targetX + cellSize * (1 + SNAP_TOLERANCE * 0.3) &&
+    event.clientY >= targetY - cellSize * SNAP_TOLERANCE &&
+    event.clientY <= targetY + cellSize * (1 + SNAP_TOLERANCE * 0.3);
+  const correct = wasDragged && inside && near;
+  dragging = null; dragPointerId = null; hideHighlight();
+  if (correct) { placePiece(piece); return; }
+  if (wasDragged) {
+    piece.el.classList.add('shake'); soundError();
+    setTimeout(() => { piece.el.classList.remove('shake'); if (!piece.placed) returnToTray(piece); }, 340);
+  } else returnToTray(piece);
+}
+function onPointerCancel(event) { if (dragging && event.pointerId === dragPointerId) cancelDrag(); }
+function onLostPointerCapture(event) { if (dragging && event.pointerId === dragPointerId) cancelDrag(); }
+
+function returnToTray(piece) {
+  const el = piece.el;
+  el.style.transition = 'transform 160ms ease';
+  el.style.position = 'absolute';
+  el.style.left = '0';
+  el.style.top = '0';
+  el.style.zIndex = '';
+  el.style.transform = 'translate(' + (el.dataset.trayX||0) + 'px,' + (el.dataset.trayY||0) + 'px) scale(' + trayScale + ')';
+}
+
+/** Place piece: paint onto board canvas and remove DOM element — no jump */
+function placePiece(piece) {
+  piece.placed = true;
+  placedCount++;
+  placedSet.add(piece.row + ',' + piece.col);
+  // remove floating piece immediately — color is now on the board
+  try {
+    if (dragPointerId !== null && piece.el.hasPointerCapture && piece.el.hasPointerCapture(dragPointerId)) {
+      piece.el.releasePointerCapture(dragPointerId);
+    }
+  } catch (_) {}
+  piece.el.remove();
+  drawBoard();
+  soundCorrect();
+  if (placedCount === puzzleSize * puzzleSize) setTimeout(finishGame, 220);
+}
+
+/* confetti */
+const confettiCanvas = $('confettiCanvas');
+const confettiCtx = confettiCanvas.getContext('2d');
+let confettiParticles = [], confettiFrame = 0;
+function launchConfetti() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  confettiCanvas.width = Math.floor(innerWidth * dpr);
+  confettiCanvas.height = Math.floor(innerHeight * dpr);
+  confettiCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const colors = ['#D5B982','#9BAF9B','#B7C8CC','#F2E9D9','#C7A99A','#E8A090'];
+  confettiParticles = [];
+  for (let burst = 0; burst < 5; burst++) {
+    const ox = burst % 2 === 0 ? innerWidth * .08 : innerWidth * .92;
+    const oy = innerHeight * .68;
+    for (let i = 0; i < 40; i++) {
+      const angle = (Math.random() * Math.PI * .9) + (burst % 2 === 0 ? -Math.PI * .95 : -Math.PI * .05);
+      const speed = 2 + Math.random() * 6;
+      confettiParticles.push({
+        x:ox,y:oy,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed-2-Math.random()*2,
+        rotation:Math.random()*6,spin:(Math.random()-.5)*.22,
+        size:4+Math.random()*7,color:colors[Math.floor(Math.random()*colors.length)],
+        life:150+Math.random()*55,shape:Math.random()
+      });
+    }
+  }
+  cancelAnimationFrame(confettiFrame); animateConfetti(); soundPop();
+}
+function animateConfetti() {
+  confettiCtx.clearRect(0,0,innerWidth,innerHeight);
+  let alive = 0;
+  for (const p of confettiParticles) {
+    if (p.life <= 0) continue; alive++;
+    p.x+=p.vx; p.y+=p.vy; p.vy+=.075; p.vx*=.995; p.rotation+=p.spin; p.life--;
+    confettiCtx.save(); confettiCtx.translate(p.x,p.y); confettiCtx.rotate(p.rotation);
+    confettiCtx.globalAlpha=Math.min(1,p.life/35); confettiCtx.fillStyle=p.color;
+    if (p.shape<.25){confettiCtx.beginPath();confettiCtx.arc(0,0,p.size*.55,0,Math.PI*2);confettiCtx.fill();}
+    else confettiCtx.fillRect(-p.size/2,-p.size/3,p.size,p.size*.65);
+    confettiCtx.restore();
+  }
+  if (alive) confettiFrame = requestAnimationFrame(animateConfetti);
+  else confettiCtx.clearRect(0,0,innerWidth,innerHeight);
+}
+function stopConfetti() { cancelAnimationFrame(confettiFrame); confettiParticles=[]; confettiCtx.clearRect(0,0,innerWidth,innerHeight); }
+
+/* easter — more frequent */
+let easterTimer = null, easterHideTimer = null;
+function hideEaster() {
+  const egg = $('easterEgg'); egg.classList.remove('show'); egg.style.display='none'; clearTimeout(easterHideTimer);
+}
+function scheduleEaster() {
+  clearTimeout(easterTimer);
+  if (!screens.game.classList.contains('active') || !shuffled || placedCount >= puzzleSize*puzzleSize) return;
+  easterTimer = setTimeout(showEaster, 7000 + Math.random() * 10000);
+}
+function showEaster() {
+  if (!screens.game.classList.contains('active') || !shuffled || placedCount >= puzzleSize*puzzleSize) return;
+  const egg = $('easterEgg'), creature = egg.querySelector('.creature'), speech = egg.querySelector('.speech');
+  const roll = Math.random(), bird = roll < .5;
+  creature.textContent = bird ? '🐦' : (roll < .78 ? '🐱' : '🐶');
+  speech.textContent = bird ? 'Ку-ку!' : (roll < .78 ? 'Привет!' : 'Гав!');
+  const rect = board.getBoundingClientRect();
+  egg.style.top = Math.max(75, Math.min(innerHeight-100, rect.top+20+Math.random()*Math.max(10,rect.height-80))) + 'px';
+  egg.style.left = Math.max(0, rect.left - 8) + 'px';
+  egg.style.display = 'flex'; egg.classList.remove('show'); void egg.offsetWidth; egg.classList.add('show');
+  if (!isMuted) {
+    if (bird) { tone(880,.22,'sine',.055); tone(660,.28,'sine',.055,.24); }
+    else if (roll < .78) { tone(620,.12,'triangle',.04); tone(470,.2,'triangle',.035,.1); }
+    else tone(420,.16,'triangle',.04);
+  }
+  clearTimeout(easterHideTimer); easterHideTimer = setTimeout(hideEaster, 3200); scheduleEaster();
+}
+function stopEaster() { clearTimeout(easterTimer); clearTimeout(easterHideTimer); hideEaster(); }
+
+function finishGame() {
+  clearInterval(gameClock); gameClock = null;
+  const starsGain = puzzleSize >= 4 ? 3 : 2;
+  completedGames++; earnedStars += starsGain;
+  localStorage.setItem('kilkinCompleted', completedGames);
+  localStorage.setItem('kilkinStars', earnedStars);
+  if (currentImageId && currentImageId !== 'custom') {
+    completedMap[currentImageId] = Math.max(completedMap[currentImageId]||0, starsGain);
+    localStorage.setItem('kilkinCompletedMap', JSON.stringify(completedMap));
+  }
+  updateProgress();
+  const timeStr = elapsedSeconds > 0
+    ? String(Math.floor(elapsedSeconds/60)).padStart(2,'0') + ':' + String(elapsedSeconds%60).padStart(2,'0')
+    : null;
+  $('winTitle').textContent = 'Ура! ' + '★'.repeat(starsGain) + '\nТы справился!';
+  $('winStats').textContent = timeStr ? 'Время: ' + timeStr : 'Отличная работа!';
+  shuffled = false; linesShown = false;
+  // show full image on board
+  drawBoard();
+  const maxSide = Math.floor(Math.min(window.innerWidth*.82, window.innerHeight*.48, 400));
+  winCanvas.width = winCanvas.height = maxSide;
+  winCanvas.style.width = maxSide + 'px'; winCanvas.style.height = maxSide + 'px';
+  winCanvas.getContext('2d').drawImage(boardImg, 0, 0, maxSide, maxSide);
+  stopEaster(); win.classList.add('show'); soundWin(); launchConfetti();
+}
+
+function askBack() {
+  if (placedCount === puzzleSize * puzzleSize) { goToSelect(); return; }
+  confirmDialog.classList.add('show');
+}
+
+function reshuffle() {
+  if (shuffled || !pieces.length) return;
+  shuffled = true;
+  gameStartedAt = Date.now();
+  clearInterval(gameClock);
+  if ($('timerToggle').checked) {
+    gameClock = setInterval(() => {
+      elapsedSeconds = Math.floor((Date.now() - gameStartedAt) / 1000);
+      $('timerLabel').textContent =
+        String(Math.floor(elapsedSeconds/60)).padStart(2,'0') + ':' +
+        String(elapsedSeconds%60).padStart(2,'0');
+    }, 500);
+  }
+  btnShuffle.disabled = true;
+  drawBoard(); // switches to contour
+  layoutTray(shuffleArray(pieces.filter(p => !p.placed)));
+  scheduleEaster();
+}
+
+/* events */
+$('collectionTabs').addEventListener('click', e => {
+  const b = e.target.closest('button[data-collection]'); if (!b) return;
+  collectionFilter = b.dataset.collection;
+  $('collectionTabs').querySelectorAll('button').forEach(x => x.classList.toggle('active', x === b));
+  renderGallery(); soundClick();
+});
+document.querySelectorAll('.difficulty button').forEach(button => {
+  button.addEventListener('click', () => {
+    puzzleSize = Number(button.dataset.size);
+    document.querySelectorAll('.difficulty button').forEach(b => b.classList.toggle('active', b === button));
+    soundClick();
+  });
+});
+btnLines.addEventListener('click', () => {
+  soundClick(); linesShown = !linesShown; drawBoard();
+  btnLines.textContent = linesShown ? 'Скрыть линии' : 'Показать линии';
+  if (linesShown) btnShuffle.disabled = false;
+});
+btnShuffle.addEventListener('click', () => { soundClick(); reshuffle(); });
+$('timerToggle').addEventListener('change', () => {
+  if (!shuffled) return;
+  clearInterval(gameClock); gameClock = null;
+  if ($('timerToggle').checked) {
+    gameStartedAt = Date.now() - elapsedSeconds * 1000;
+    gameClock = setInterval(() => {
+      elapsedSeconds = Math.floor((Date.now() - gameStartedAt) / 1000);
+      $('timerLabel').textContent =
+        String(Math.floor(elapsedSeconds/60)).padStart(2,'0') + ':' +
+        String(elapsedSeconds%60).padStart(2,'0');
+    }, 500);
+  }
+});
+$('btnMusic').addEventListener('click', () => toggleMusic());
+$('btnMute').addEventListener('click', () => { toggleMute(); soundClick(); });
+$('btnPlay').addEventListener('click', () => { soundClick(); showScreen('select'); });
+$('btnSelectBack').addEventListener('click', () => { soundClick(); goToTitle(); });
+$('btnGameBack').addEventListener('click', () => { soundClick(); askBack(); });
+$('btnUpload').addEventListener('click', () => { soundClick(); fileInput.click(); });
+fileInput.addEventListener('change', e => loadUserImage(e.target.files && e.target.files[0]));
+$('btnConfirmYes').addEventListener('click', () => { soundClick(); confirmDialog.classList.remove('show'); goToSelect(); });
+$('btnConfirmNo').addEventListener('click', () => { soundClick(); confirmDialog.classList.remove('show'); });
+$('btnRestartWin').addEventListener('click', () => { soundClick(); goToSelect(); });
+confirmDialog.addEventListener('pointerdown', e => { if (e.target === confirmDialog) confirmDialog.classList.remove('show'); });
+
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    if (!screens.game.classList.contains('active') || !boardImg) return;
+    if (!shuffled && placedCount === 0) initGameGeometry();
+    else {
+      const newSize = calcBoardSize();
+      const newCell = Math.floor(newSize / puzzleSize);
+      const newBoard = newCell * puzzleSize;
+      if (Math.abs(newBoard - boardSize) < 8) return;
+      boardSize = newBoard; cellSize = newCell;
+      boardWrap.style.width = boardSize + 'px';
+      boardWrap.style.height = boardSize + 'px';
+      drawBoard();
+      // re-layout remaining tray pieces
+      const remaining = pieces.filter(p => !p.placed);
+      if (remaining.length) {
+        remaining.forEach(p => {
+          p.el.style.width = cellSize + 'px';
+          p.el.style.height = cellSize + 'px';
+          p.el.style.backgroundSize = boardSize + 'px ' + boardSize + 'px';
+          p.el.style.backgroundPosition = (-p.col * cellSize) + 'px ' + (-p.row * cellSize) + 'px';
+        });
+        layoutTray(remaining);
+      }
+    }
+  }, 140);
+});
+document.addEventListener('visibilitychange', () => { if (document.hidden) cancelDrag(); });
+document.addEventListener('keydown', event => {
+  if (event.key !== 'Escape') return;
+  if (confirmDialog.classList.contains('show')) confirmDialog.classList.remove('show');
+  else if (win.classList.contains('show')) goToSelect();
+  else if (screens.game.classList.contains('active')) askBack();
+  else if (screens.select.classList.contains('active')) goToTitle();
+});
+
+const startAudioOnce = () => {
+  initAudio();
+  if (musicWanted && !isMuted) startMusic();
+  document.removeEventListener('pointerdown', startAudioOnce);
+};
+document.addEventListener('pointerdown', startAudioOnce);
+
+applyMuteUI();
+updateProgress();
+renderGallery();
+})();
+</script>
+</body>
+</html>

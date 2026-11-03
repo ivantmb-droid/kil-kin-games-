@@ -10,7 +10,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<title>KIL'KIN Games v3 — маленькие шаги, большие приключения</title>
+<title>KIL'KIN Games v6 — маленькие шаги, большие приключения</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
 <style>
 :root{--paper:#F4F1EA;--paper-dark:#E8E8E6;--green:#2c4c3b;--green-dark:#1a2e23;--sage:#90A4AE;--sage-dark:#607D8B;--sand:#d6a978;--sand-dark:#b5895b;--shadow:0 6px 18px rgba(44,76,59,.12)}
@@ -85,6 +85,16 @@ button:disabled{opacity:.45;cursor:not-allowed}
 #easterEgg .speech{font:900 16px Nunito,system-ui,sans-serif;color:var(--green);background:#fff;border:2px solid #e6dfd1;border-radius:18px;padding:7px 12px;box-shadow:var(--shadow)}
 @keyframes peek{0%{transform:translateX(-125%)}18%,68%{transform:translateX(0)}100%{transform:translateX(-125%)}}
 @keyframes winBounce{0%{transform:scale(.3) rotate(-8deg);opacity:0}75%{transform:scale(1.08) rotate(2deg)}100%{transform:scale(1);opacity:1}}
+
+.volume-wrap{display:flex;align-items:center;gap:10px;margin:8px 0 14px;background:#fff;border:2px solid #d9d5cc;border-radius:16px;padding:8px 14px;box-shadow:0 3px 0 #d9d5cc}
+.volume-wrap span{font-size:16px}
+.volume-wrap input[type=range]{width:min(42vw,160px);accent-color:var(--green);height:6px}
+.version-note{position:absolute;bottom:max(12px,env(safe-area-inset-bottom));left:0;right:0;text-align:center;font-size:11px;font-weight:800;color:#9aa39a;letter-spacing:1px}
+#winTitle{white-space:pre-line}
+#winPhrase{color:#e8f0e8;font-size:clamp(15px,3.8vw,18px);font-weight:800;text-align:center;max-width:90%;opacity:0;animation:fadePhrase .5s ease .25s forwards}
+@keyframes fadePhrase{to{opacity:1}}
+.logo{max-height:22vh;width:min(78vw,340px);object-fit:contain;margin-bottom:12px}
+
 @media(max-height:650px){#gameScreen{gap:5px}#tray{max-height:30vh}}
 @media(min-width:700px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
@@ -92,12 +102,17 @@ button:disabled{opacity:.45;cursor:not-allowed}
 </head>
 <body>
 <section id="titleScreen" class="screen active" aria-label="Главное меню">
-  <img class="logo" id="logoImg" src="images/logo.jpg" alt="KIL'KIN"
-       onerror="this.style.display='none'">
+  <img class="logo" id="logoImg" src="images/logo.png" alt="kil'kin"
+       onerror="this.onerror=null;this.src='images/logo.jpg'">
   <div class="tagline">little steps · big adventures</div>
   <button id="btnMusic" type="button" aria-pressed="false">♫ Музыка: выкл.</button>
+  <div class="volume-wrap" title="Громкость">
+    <span>🔊</span>
+    <input id="volumeSlider" type="range" min="0" max="100" value="70" aria-label="Громкость">
+  </div>
   <button class="btn-play" id="btnPlay">Играть</button>
   <div class="games-word">Games</div>
+  <div class="version-note">KIL'KIN Games · v6</div>
 </section>
 <button id="btnMute" type="button" aria-label="Звук">🔊</button>
 
@@ -168,13 +183,18 @@ const SNAP_TOLERANCE = 0.7;
 const $ = id => document.getElementById(id);
 
 const galleryData = [
-  { id:'kitten',  name:'Котёнок Кили', src:'images/kitten.jpg',  collection:'home' },
-  { id:'puppy',   name:'Щенок Бим',    src:'images/puppy.jpg',   collection:'home' },
-  { id:'house',   name:'Домик',        src:'images/house.jpg',   collection:'home' },
-  { id:'cow',     name:'Коровка',      src:'images/cow.jpg',     collection:'nature' },
-  { id:'balloon', name:'Воздушный шар',src:'images/balloon.jpg', collection:'nature' },
-  { id:'car',     name:'Машинка',      src:'images/car.jpg',     collection:'travel' },
-  { id:'plane',   name:'Самолётик',    src:'images/plane.jpg',   collection:'travel' }
+  { id:'kitten',   name:'Котёнок Кили', src:'images/kitten.jpg',   collection:'home' },
+  { id:'puppy',    name:'Щенок Бим',    src:'images/puppy.jpg',    collection:'home' },
+  { id:'house',    name:'Домик',        src:'images/house.jpg',    collection:'home' },
+  { id:'bear',     name:'Мишка',        src:'images/bear.jpg',     collection:'home' },
+  { id:'cow',      name:'Коровка',      src:'images/cow.jpg',      collection:'nature' },
+  { id:'hedgehog', name:'Ёжик',         src:'images/hedgehog.jpg', collection:'nature' },
+  { id:'balloon',  name:'Воздушный шар',src:'images/balloon.jpg',  collection:'nature' },
+  { id:'rainbow',  name:'Радуга',       src:'images/rainbow.jpg',  collection:'nature' },
+  { id:'cake',     name:'Тортик',       src:'images/cake.jpg',     collection:'home' },
+  { id:'car',      name:'Машинка',      src:'images/car.jpg',      collection:'travel' },
+  { id:'plane',    name:'Самолётик',    src:'images/plane.jpg',    collection:'travel' },
+  { id:'ship',     name:'Кораблик',     src:'images/ship.jpg',     collection:'travel' }
 ];
 
 const screens = { title:$('titleScreen'), select:$('selectScreen'), game:$('gameScreen') };
@@ -208,6 +228,9 @@ try { completedMap = JSON.parse(localStorage.getItem('kilkinCompletedMap') || '{
 
 /* ---- audio ---- */
 let isMuted = localStorage.getItem('kilkinMuted') === '1';
+let masterVolume = Number(localStorage.getItem('kilkinVolume'));
+if (!Number.isFinite(masterVolume)) masterVolume = 0.7;
+masterVolume = Math.min(1, Math.max(0, masterVolume));
 let musicOn = false, musicWanted = localStorage.getItem('kilkinMusicWanted') === '1';
 let melodyAudio = null;
 
@@ -228,7 +251,7 @@ function tone(freq, duration=0.12, type='sine', volume=0.07, delay=0) {
     const o = audioCtx.createOscillator();
     const g = audioCtx.createGain();
     o.type = type; o.frequency.setValueAtTime(freq, start);
-    g.gain.setValueAtTime(Math.max(0.0001, volume), start);
+    g.gain.setValueAtTime(Math.max(0.0001, volume * (isMuted ? 0 : masterVolume)), start);
     g.gain.exponentialRampToValueAtTime(0.0001, start + duration);
     o.connect(g); g.connect(audioCtx.destination);
     o.start(start); o.stop(start + duration + 0.02);
@@ -245,7 +268,7 @@ function ensureMelody() {
   if (melodyAudio) return melodyAudio;
   melodyAudio = new Audio('sounds/melody.wav');
   melodyAudio.loop = true;
-  melodyAudio.volume = 0.35;
+  melodyAudio.volume = 0.45 * masterVolume;
   melodyAudio.preload = 'auto';
   return melodyAudio;
 }
@@ -253,6 +276,7 @@ function startMusic() {
   if (isMuted) return;
   initAudio();
   const a = ensureMelody();
+  applyVolume();
   a.currentTime = 0;
   const p = a.play();
   if (p && p.catch) p.catch(()=>{});
@@ -280,6 +304,11 @@ function toggleMusic() {
   else startMusic();
 }
 function applyMuteUI() { $('btnMute').textContent = isMuted ? '🔇' : '🔊'; }
+function applyVolume() {
+  if (melodyAudio) melodyAudio.volume = isMuted ? 0 : 0.45 * masterVolume;
+  const sl = $('volumeSlider');
+  if (sl) sl.value = String(Math.round(masterVolume * 100));
+}
 function toggleMute() {
   isMuted = !isMuted;
   localStorage.setItem('kilkinMuted', isMuted ? '1' : '0');
@@ -296,14 +325,13 @@ function showScreen(name) {
 function closeOverlays() { win.classList.remove('show'); confirmDialog.classList.remove('show'); }
 function goToTitle() {
   clearInterval(gameClock); stopEaster(); stopConfetti(); closeOverlays();
-  stopMusic();
   showScreen('title');
+  if (musicWanted && !isMuted) startMusic();
 }
 function goToSelect() {
   clearInterval(gameClock); stopEaster(); stopConfetti(); closeOverlays();
-  // при выходе из партии останавливаем музыку (в Koder иначе продолжает играть)
-  stopMusic();
   showScreen('select'); renderGallery();
+  if (musicWanted && !isMuted) startMusic();
 }
 function updateProgress() {
   const stars = '★'.repeat(Math.min(earnedStars,12)) || '—';
@@ -787,8 +815,27 @@ function finishGame() {
   const timeStr = elapsedSeconds > 0
     ? String(Math.floor(elapsedSeconds/60)).padStart(2,'0') + ':' + String(elapsedSeconds%60).padStart(2,'0')
     : null;
-  $('winTitle').textContent = 'Ура! ' + '★'.repeat(starsGain) + '\nТы справился!';
+  const phrases = [
+    'Килли гордится тобой!',
+    'Ещё одна звезда в коллекции!',
+    'Ты справился!',
+    'Какой ты молодец!',
+    'Супер! Так держать!',
+    'Пазл собран — ура!',
+    'Глаз-алмаз!',
+    'Ты сегодня в ударе!',
+    'Красота получилась!',
+    'Маленький шаг — большое дело!'
+  ];
+  const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+  $('winTitle').textContent = 'Ура! ' + '★'.repeat(starsGain);
+  const wp = $('winPhrase');
+  if (wp) { wp.textContent = phrase; wp.style.animation = 'none'; void wp.offsetWidth; wp.style.animation = ''; }
   $('winStats').textContent = timeStr ? 'Время: ' + timeStr : 'Отличная работа!';
+  // короткая «фанфара» поверх мелодии
+  if (!isMuted) {
+    [523.25,659.25,783.99,1046.5].forEach((n,i)=>tone(n,.18,'sine',.09,i*.12));
+  }
   shuffled = false; linesShown = false;
   // show full image on board
   drawBoard();
@@ -857,6 +904,16 @@ $('timerToggle').addEventListener('change', () => {
   }
 });
 $('btnMusic').addEventListener('click', () => toggleMusic());
+const volSl = $('volumeSlider');
+if (volSl) {
+  volSl.value = String(Math.round(masterVolume * 100));
+  volSl.addEventListener('input', () => {
+    masterVolume = Number(volSl.value) / 100;
+    localStorage.setItem('kilkinVolume', String(masterVolume));
+    if (masterVolume > 0 && isMuted) { isMuted = false; localStorage.setItem('kilkinMuted','0'); applyMuteUI(); }
+    applyVolume();
+  });
+}
 $('btnMute').addEventListener('click', () => { toggleMute(); soundClick(); });
 $('btnPlay').addEventListener('click', () => { soundClick(); showScreen('select'); });
 $('btnSelectBack').addEventListener('click', () => { soundClick(); goToTitle(); });
@@ -920,11 +977,13 @@ function haltAllAudio() {
 }
 window.addEventListener('pagehide', haltAllAudio);
 window.addEventListener('beforeunload', haltAllAudio);
+// visibility: только отменяем drag; музыку не рвём (удобно на телефоне)
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) haltAllAudio();
+  if (document.hidden) cancelDrag();
 });
 
 applyMuteUI();
+applyVolume();
 updateProgress();
 renderGallery();
 

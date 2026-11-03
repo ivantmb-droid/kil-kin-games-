@@ -1,5 +1,5 @@
-/* KIL'KIN Games service worker v3 */
-const CACHE = 'kilkin-v3';
+/* KIL'KIN Games service worker v6 */
+const CACHE = 'kilkin-v6';
 const ASSETS = [
   './',
   './index.html',
@@ -7,6 +7,7 @@ const ASSETS = [
   './icon-192.png',
   './icon-512.png',
   './images/logo.jpg',
+  './images/logo.png',
   './images/kitten.jpg',
   './images/puppy.jpg',
   './images/house.jpg',
@@ -14,6 +15,11 @@ const ASSETS = [
   './images/balloon.jpg',
   './images/car.jpg',
   './images/plane.jpg',
+  './images/bear.jpg',
+  './images/rainbow.jpg',
+  './images/cake.jpg',
+  './images/ship.jpg',
+  './images/hedgehog.jpg',
   './sounds/click.wav',
   './sounds/pickup.wav',
   './sounds/correct.wav',
